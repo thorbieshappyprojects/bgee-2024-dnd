@@ -1,0 +1,79 @@
+// Core rules: game texts in 2024 terms.
+//
+// THAC0 no longer exists: descriptions of spells, items and classes talk about attack rolls and
+// the attack bonus instead. Bonuses keep their numbers (a +1 THAC0 bonus is a +1 attack bonus);
+// absolute THAC0 values ("13 THAC0", "THAC0 13", "a THAC0 of 2", e.g. in summon descriptions)
+// are converted (attack bonus = 20 - THAC0), and "lower THAC0 is better" becomes "higher".
+// Class descriptions still describe 2e features; they are rewritten with each class component.
+DEFINE_PATCH_MACRO b24_attack_sign
+BEGIN
+  TEXT_SPRINT b24_sign ~%b24_bonus%~
+  PATCH_IF (b24_bonus >= 0) BEGIN TEXT_SPRINT b24_sign ~+%b24_bonus%~ END
+END
+
+// Absolute Armor Class values ("an AC of -5", "sets the Armor Class to 4", "Armor Class: 5") are
+// converted to 2024 AC = 20 - BG AC; bonuses ("+2 to AC", "Armor Class: +1") keep their numbers.
+// Items whose AC the mod changes get their exact value afterwards (b24_core_items.tpa).
+ALTER_TLK BEGIN
+  REPLACE_EVALUATE CASE_SENSITIVE ~\(Armor Class\|AC\) \(of\|to\) \(-?[0-9]+\)~ BEGIN
+    SET b24_ac = 20 - MATCH3
+  END ~%MATCH1% %MATCH2% %b24_ac%~
+  REPLACE_EVALUATE CASE_SENSITIVE ~Armor Class: \([0-9]+\)\([^0-9]\)~ BEGIN
+    SET b24_ac = 20 - MATCH1
+  END ~Armor Class: %b24_ac%%MATCH2%~
+END
+
+ALTER_TLK BEGIN
+  // "a THAC0" becomes "an attack bonus"; the article goes first, the word is replaced below.
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\([ (]\)\([aA]\) THAC\([0O]\)~ ~\1\2n THAC\3~
+  // Absolute values.
+  REPLACE_EVALUATE CASE_SENSITIVE ~\([^-+0-9]\)\([0-9]+\) THAC[0O]~ BEGIN
+    SET b24_bonus = 20 - MATCH2
+    LPM b24_attack_sign
+  END ~%MATCH1%%b24_sign% attack bonus~
+  REPLACE_EVALUATE CASE_SENSITIVE ~THAC[0O] of \([0-9]+\)~ BEGIN
+    SET b24_bonus = 20 - MATCH1
+    LPM b24_attack_sign
+  END ~attack bonus of %b24_sign%~
+  REPLACE_EVALUATE CASE_SENSITIVE ~THAC[0O]:? \([0-9]+\)\([^0-9]\)~ BEGIN
+    SET b24_bonus = 20 - MATCH1
+    LPM b24_attack_sign
+  END ~attack bonus %b24_sign%%MATCH2%~
+  // Lower THAC0 was better; a higher attack bonus is.
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\([Ll]\)ower \(your \|the \|a \|\)THAC[0O]~ ~higher \2attack bonus~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\([Ll]\)owers \(your \|the \|\)THAC[0O]~ ~raises \2attack bonus~
+  // Wording.
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\(bonus\|penalty\|modifier\) to \(his\|her\|their\|its\|your\|the\|<PRO_HISHER>\) THAC[0O]~ ~\1 to \2 attack rolls~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\(bonus\|penalty\|modifier\) to THAC[0O]~ ~\1 to attack rolls~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~THAC[0O] \(bonus\|bonuses\|penalty\|penalties\|modifier\)~ ~attack \1~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~THAC[0O]:~ ~Attack bonus:~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~\([.!?]  *\|^\)THAC[0O]~ ~\1Attack bonus~
+  REPLACE_TEXTUALLY CASE_SENSITIVE ~THAC[0O]~ ~attack bonus~
+END
+
+// 2e saving throws ("save vs. spell", "saving throw vs. breath weapon at -2") become the 2024
+// ability saves the mod rolls for them: spells Wisdom, breath and wands Dexterity, death, poison,
+// paralysis, petrification and polymorph Constitution (B24SAVE.lua; spells with their own 2024
+// save get it from the Spells component). A 2e penalty to the save stays in the text; the mod
+// applies it as a higher DC.
+ALTER_TLK BEGIN
+  REPLACE_EVALUATE CASE_INSENSITIVE ~\(saving throws?\|saves?\) \(vs\.?\|versus\) \(spells?\|death\|poison\|paralysis\|paralyzation\|wands?\|rods?\|staves\|polymorph\|petrification\|breath weapons?\|breath\|all\)~ BEGIN
+    TEXT_SPRINT b24_kind ~%MATCH3%~
+    TO_LOWER b24_kind
+    TEXT_SPRINT b24_ability ~Wisdom~
+    PATCH_IF (INDEX (~breath~ ~%b24_kind%~) >= 0) OR (INDEX (~wand~ ~%b24_kind%~) >= 0) OR (INDEX (~rod~ ~%b24_kind%~) >= 0) OR (INDEX (~staves~ ~%b24_kind%~) >= 0) BEGIN
+      TEXT_SPRINT b24_ability ~Dexterity~
+    END ELSE PATCH_IF NOT (INDEX (~spell~ ~%b24_kind%~) >= 0) BEGIN
+      TEXT_SPRINT b24_ability ~Constitution~
+    END
+    TEXT_SPRINT b24_noun ~%MATCH1%~
+    TO_LOWER b24_noun
+    TEXT_SPRINT b24_plural ~~
+    PATCH_IF (~%b24_noun%~ STRING_MATCHES_REGEXP ~.*s$~ = 0) BEGIN TEXT_SPRINT b24_plural ~s~ END
+    PATCH_IF (~%b24_kind%~ STRING_EQUAL ~all~) BEGIN
+      TEXT_SPRINT b24_save ~all saves~
+    END ELSE BEGIN
+      TEXT_SPRINT b24_save ~%b24_ability% save%b24_plural%~
+    END
+  END ~%b24_save%~
+END

@@ -1,0 +1,13 @@
+* text=auto
+*.tp2 text eol=crlf
+*.tpa text eol=crlf
+*.tph text eol=crlf
+*.tra text eol=crlf
+*.2da text eol=crlf
+*.ps1 text eol=crlf
+*.exe binary
+*.spl binary
+*.itm binary
+*.cre binary
+*.eff binary
+*.bam binary

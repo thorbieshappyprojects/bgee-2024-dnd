@@ -1,0 +1,283 @@
+// Core rules: EEex runtime (Lua scripts, data tables, Short Rest ability, global script hooks).
+
+// Spell states read by the Lua scripts.
+LAF b24_spell_state STR_VAR name = ~B24_ARMOR_MEDIUM~ RET b24_state_medium = id END
+LAF b24_spell_state STR_VAR name = ~B24_ARMOR_HEAVY~  RET b24_state_heavy  = id END
+OUTER_SET b24_state_prone = IDS_OF_SYMBOL (~splstate~ ~PRONE~)
+OUTER_SET b24_state_held  = IDS_OF_SYMBOL (~splstate~ ~HELD~)
+ACTION_IF ((b24_state_prone < 0) OR (b24_state_held < 0)) BEGIN
+  FAIL ~SPLSTATE.IDS has no PRONE or HELD entry; this game build is not supported.~
+END
+
+// Level cap (2024: level 20). XPLEVEL.2DA's thresholds for levels 21 and up become unreachable;
+// the original table stays as B24EPXP.2DA, whose thresholds past 20 bring Epic Boons instead
+// (B24GFEAT.lua).
+COPY_EXISTING ~xplevel.2da~ ~override/b24epxp.2da~
+// Rows differ in length (BG:EE's DRUID row has one value more): every row with levels up to 40,
+// the header (its first entry is a level number) left alone.
+COPY_EXISTING ~xplevel.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_xp_rows 41
+  FOR (r = 0; r < b24_xp_rows; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24_xp_rows r 0 b24_xp_label
+    PATCH_IF NOT IS_AN_INT b24_xp_label BEGIN
+      FOR (c = 21; c <= 40; ++c) BEGIN
+        SET_2DA_ENTRY_LATER b24_xp_set r c ~99999999~
+      END
+    END
+  END
+  SET_2DA_ENTRIES_NOW b24_xp_set 41
+  BUT_ONLY
+
+// No High Level Abilities (2024 has none; Epic Boons take their place): every ability in the
+// classes' HLA tables (LUABBR.2DA names them, LUxxx.2DA) gets minimum level 99, so none is ever
+// available and the level-up screen's Done works as when all HLAs are taken.
+COPY_EXISTING_REGEXP GLOB ~^lu.*\.2da$~ ~override~
+  PATCH_IF NOT (~%SOURCE_RES%~ STRING_EQUAL_CASE ~luabbr~) BEGIN
+    READ_2DA_ENTRIES_NOW b24_hla_rows 9
+    FOR (r = 0; r < b24_hla_rows; ++r) BEGIN
+      READ_2DA_ENTRY_FORMER b24_hla_rows r 1 b24_hla_ability
+      PATCH_IF (~%b24_hla_ability%~ STRING_MATCHES_REGEXP ~^\(GA\|AP\|RA\)_.*~ = 0) BEGIN
+        SET_2DA_ENTRY_LATER b24_hla_set r 4 ~99~
+      END
+    END
+    SET_2DA_ENTRIES_NOW b24_hla_set 9
+  END
+  BUT_ONLY
+
+// Data tables shared by WeiDU and Lua.
+COPY ~bg2024/tables/b24class.2da~ ~override/b24class.2da~
+     ~bg2024/tables/b24conc.2da~  ~override/b24conc.2da~
+     ~bg2024/tables/b24saves.2da~ ~override/b24saves.2da~
+     ~bg2024/tables/b24weap.2da~  ~override/b24weap.2da~
+
+// Lua runtime. M_B24.lua is loaded by the engine and loads the rest.
+COPY ~bg2024/lua/M_B24.lua~   ~override~
+     ~bg2024/lua/B24CORE.lua~ ~override~
+     ~bg2024/lua/B24SAVE.lua~ ~override~
+     ~bg2024/lua/B24PROF.lua~ ~override~
+     ~bg2024/lua/B24WPN.lua~  ~override~
+     ~bg2024/lua/B24ROUND.lua~ ~override~
+     ~bg2024/lua/B24COND.lua~ ~override~
+     ~bg2024/lua/B24UI.lua~   ~override~
+     ~bg2024/lua/B24ADV.lua~  ~override~
+     ~bg2024/lua/B24CONC.lua~ ~override~
+     ~bg2024/lua/B24REST.lua~ ~override~
+     ~bg2024/lua/B24DYING.lua~ ~override~
+     ~bg2024/lua/B24TURN.lua~ ~override~
+     ~bg2024/lua/B24TURN.menu~ ~override~
+     ~bg2024/lua/B24MULTI.lua~ ~override~
+     ~bg2024/lua/B24OPT.lua~  ~override~
+
+// Portrait icons of the mod's states (B24.ShowIcon in B24CORE.lua): own STATDESC.2DA rows with the
+// state's name and icon (portraits/, from art/portraits through tools/png2bam.pl --portrait).
+OUTER_SPRINT b24_icons ~~
+DEFINE_ACTION_MACRO b24_icon_row BEGIN
+  LAF b24_portrait_icon INT_VAR name = b24_icon_name STR_VAR bam = EVAL ~B24P%b24_icon_key%~ RET b24_icon_id = icon END
+  OUTER_SPRINT b24_icons ~%b24_icons%	%b24_icon_key% = %b24_icon_id%,%LNL%~
+END
+OUTER_SPRINT b24_icon_key CONC OUTER_SET b24_icon_name = RESOLVE_STR_REF (@950) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key RAGE OUTER_SET b24_icon_name = RESOLVE_STR_REF (@951) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key RECK OUTER_SET b24_icon_name = RESOLVE_STR_REF (@952) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key EXHA OUTER_SET b24_icon_name = RESOLVE_STR_REF (@953) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key PRON OUTER_SET b24_icon_name = RESOLVE_STR_REF (@954) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key GRAP OUTER_SET b24_icon_name = RESOLVE_STR_REF (@955) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key REST OUTER_SET b24_icon_name = RESOLVE_STR_REF (@956) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key HMRK OUTER_SET b24_icon_name = RESOLVE_STR_REF (@957) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key BINS OUTER_SET b24_icon_name = RESOLVE_STR_REF (@958) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key SMIT OUTER_SET b24_icon_name = RESOLVE_STR_REF (@959) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key SACW OUTER_SET b24_icon_name = RESOLVE_STR_REF (@960) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key NIMB OUTER_SET b24_icon_name = RESOLVE_STR_REF (@961) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key DODG OUTER_SET b24_icon_name = RESOLVE_STR_REF (@962) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key STAR OUTER_SET b24_icon_name = RESOLVE_STR_REF (@963) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key INSO OUTER_SET b24_icon_name = RESOLVE_STR_REF (@964) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key THP  OUTER_SET b24_icon_name = RESOLVE_STR_REF (@965) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key PORT OUTER_SET b24_icon_name = RESOLVE_STR_REF (@969) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key DYIN OUTER_SET b24_icon_name = RESOLVE_STR_REF (@972) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key STAB OUTER_SET b24_icon_name = RESOLVE_STR_REF (@973) LAM b24_icon_row
+OUTER_SPRINT b24_icon_key TURN OUTER_SET b24_icon_name = RESOLVE_STR_REF (@978) LAM b24_icon_row
+
+// Overhead text of the dying rules (B24DYING.lua).
+OUTER_SPRINT b24_head ~~
+ACTION_FOR_EACH b24_pair IN ~DYING:979~ ~FAIL1:980~ ~FAIL2:981~ ~SAVE1:983~ ~SAVE2:984~ ~STABLE:985~ ~WAKE:986~ ~LAST:987~ ~DIES:988~ ~OPPORTUNITY:989~ ~MARKED:957~ BEGIN
+  OUTER_PATCH_SAVE b24_head_key ~%b24_pair%~ BEGIN REPLACE_TEXTUALLY ~:.*~ ~~ END
+  OUTER_PATCH_SAVE b24_head_tra ~%b24_pair%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+  OUTER_SET b24_head_ref = RESOLVE_STR_REF ((AT ~%b24_head_tra%~))
+  OUTER_SPRINT b24_head ~%b24_head%	%b24_head_key% = %b24_head_ref%,%LNL%~
+END
+
+<<<<<<<< .../bg2024-inlined/B24STATE.lua
+-- Generated by bg2024.tp2 at install time: spell state values from SPLSTATE.IDS, portrait icon
+-- numbers of the mod's states (STATDESC.2DA).
+B24 = B24 or {}
+B24.SplState = {
+	ARMOR_MEDIUM = %b24_state_medium%,
+	ARMOR_HEAVY = %b24_state_heavy%,
+	PRONE = %b24_state_prone%,
+	HELD = %b24_state_held%,
+}
+B24.PortraitIcon = {
+%b24_icons%}
+B24.HeadText = {
+%b24_head%}
+>>>>>>>>
+COPY ~.../bg2024-inlined/B24STATE.lua~ ~override~ EVALUATE_BUFFER
+
+// Short Rest innate: calls B24SREST() in B24REST.lua. No one is given it any more (the Rest button
+// asks for a short or a long rest); kept for saves whose party still has it.
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@100)
+          description = RESOLVE_STR_REF (@101)
+          opcode = 402
+  STR_VAR resref = ~B24SREST~
+          icon = ~SPPR103B~
+          effect_res = ~B24SREST~
+END
+
+// Escape Grapple innate: calls B24ESCGR() in B24COND.lua; granted only while grappled.
+OUTER_SPRINT b24_escape_icon ~SPPR103B~
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr407c.bam~ BEGIN OUTER_SPRINT b24_escape_icon ~SPPR407C~ END
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@970)
+          description = RESOLVE_STR_REF (@971)
+          opcode = 402
+  STR_VAR resref = ~B24ESCGR~
+          icon = EVAL ~%b24_escape_icon%~
+          effect_res = ~B24ESCGR~
+END
+
+// The switch on the game screen in BG2:EE's button art.
+LAF b24_menu_for_game STR_VAR file = ~B24TURN.menu~ END
+
+// Turn-based combat (B24TURN.lua): the switch on the protagonist and End Turn for the party.
+OUTER_SPRINT b24_turn_icon ~SPPR103B~
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi912c.bam~ BEGIN OUTER_SPRINT b24_turn_icon ~SPWI912C~ END
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@974)
+          description = RESOLVE_STR_REF (@975)
+          opcode = 402
+  STR_VAR resref = ~B24TURNS~
+          icon = EVAL ~%b24_turn_icon%~
+          effect_res = ~B24TURNS~
+END
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@976)
+          description = RESOLVE_STR_REF (@977)
+          opcode = 402
+  STR_VAR resref = ~B24TEND~
+          icon = ~SPPR103B~
+          effect_res = ~B24TEND~
+END
+
+// Dual-classing (B24MULTI.lua turns it into a 2024 multiclass): 13 in the main abilities of the
+// old and the new class (2024 multiclass prerequisites) instead of 15 and 17. Columns: STR DEX CON
+// INT WIS CHR. Wizards need Intelligence only (not the specialists' extra scores), rangers
+// Dexterity and Wisdom, druids Wisdom, bards Charisma; the rest keep their abilities.
+ACTION_FOR_EACH b24_dual_table IN ~abdcscrq~ ~abdcdsrq~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_dual_table%.2da~ BEGIN
+    COPY_EXISTING ~%b24_dual_table%.2da~ ~override~
+      READ_2DA_ENTRIES_NOW b24_dual_rows 7
+      FOR (r = 0; r < b24_dual_rows; ++r) BEGIN
+        FOR (c = 1; c <= 6; ++c) BEGIN
+          READ_2DA_ENTRY_FORMER b24_dual_rows r c v
+          SET $b24_req(~%c%~) = (v > 0) ? 1 : 0
+        END
+        PATCH_IF ($b24_req(~4~)) BEGIN
+          FOR (c = 1; c <= 6; ++c) BEGIN SET $b24_req(~%c%~) = (c == 4) ? 1 : 0 END
+        END ELSE PATCH_IF ($b24_req(~1~) AND $b24_req(~2~) AND $b24_req(~5~)) BEGIN
+          SET $b24_req(~1~) = 0
+        END ELSE PATCH_IF ($b24_req(~5~) AND $b24_req(~6~)) BEGIN
+          SET $b24_req(~6~) = 0
+        END ELSE PATCH_IF ($b24_req(~2~) AND $b24_req(~6~)) BEGIN
+          SET $b24_req(~2~) = 0
+        END
+        FOR (c = 1; c <= 6; ++c) BEGIN
+          SET v = $b24_req(~%c%~) ? 13 : 0
+          SET_2DA_ENTRY_LATER ~b24_dual~ r c ~%v%~
+        END
+      END
+      SET_2DA_ENTRIES_NOW ~b24_dual~ 7
+      PRETTY_PRINT_2DA
+    BUT_ONLY
+  END
+END
+
+// The dual-class button: BG allows humans only; B24MC_CanDualClass (B24MULTI.lua) allows every
+// species that meets the requirements, once the XP reach the next level.
+COPY_EXISTING ~ui.menu~ ~override~
+  REPLACE_TEXTUALLY ~clickable\([ %TAB%]+\)lua "characterScreen:IsDualClassButtonClickable()"~ ~clickable\1lua "B24MC_CanDualClass()"~
+  // Multiclass level-ups go through B24MULTI.lua (the class that gains the level is chosen);
+  // everyone else keeps the engine's level-up.
+  REPLACE_TEXTUALLY ~clickable\([ %TAB%]+\)lua "characterScreen:IsLevelUpButtonClickable()"~ ~clickable\1lua "B24MC_LevelUpClickable()"~
+  REPLACE_TEXTUALLY ~" characterScreen:OnLevelUpButtonClick();"~ ~" B24MC_OnLevelUp();"~
+  // The record screen's Done: an exported character takes the mod's variables along (B24CORE.lua).
+  REPLACE_TEXTUALLY ~characterScreen:OnDoneButtonClick()~ ~B24_RecordDone()~
+  // Opening the record ends the social skills' dialogue bonus (B24PROF.lua), which would show green.
+  REPLACE_TEXTUALLY ~\(name[ %TAB%]+'CHARACTER'[^{}]*onopen[ %TAB%%LNL%%WNL%]*"\)~ ~\1 B24_RecordOpened()~
+  // The Rest button asks for a short or a long rest (B24_RestButton, B24REST.lua): Short Rest is
+  // no innate on a character, it is the party's.
+  PATCH_IF (INDEX_BUFFER (EXACT_MATCH ~e:GetActiveEngine():OnRestButtonClick()~) < 0) BEGIN
+    PATCH_PRINT ~BG2024 warning: no Rest button found in UI.MENU; short rests can't be taken from it.~
+  END
+  REPLACE_TEXTUALLY EXACT_MATCH ~e:GetActiveEngine():OnRestButtonClick()~ ~B24_RestButton()~
+  BUT_ONLY
+
+// Casting disruption and concentration damage tracking go through Lua (see B24CONC.lua).
+COPY_EXISTING ~concentr.2da~ ~override~
+  PATCH_IF (INDEX_BUFFER (~CHECK_MODE[ %TAB%]+[0-9]+~) < 0) BEGIN
+    PATCH_PRINT ~BG2024 warning: CONCENTR.2DA already uses a custom CHECK_MODE; casting disruption keeps that behavior.~
+  END ELSE BEGIN
+    REPLACE_TEXTUALLY ~CHECK_MODE\([ %TAB%]+\)[0-9]+~ ~CHECK_MODE\1EEex-LuaFunction=B24_CASTDISRUPT~
+  END
+BUT_ONLY
+
+// Global script: long rest and party setup (Short Rest ability) hooks.
+ACTION_FOR_EACH script IN ~baldur~ ~baldur25~ ~bdbaldur~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%script%.bcs~ BEGIN
+    EXTEND_TOP ~%script%.bcs~ ~bg2024/lib/b24baldr.baf~
+  END
+END
+
+// Character and inventory screens: AC and attack bonus in 2024 numbers (see B24UI.lua). Most of
+// the display goes through Lua helpers B24UI.lua overrides; these items read the values directly.
+COPY_EXISTING ~ui.menu~ ~override~
+  REPLACE_TEXTUALLY EXACT_MATCH ~"characters[id].AC.current"~ ~"B24UI_AC(characters[id].AC.current)"~
+  REPLACE_TEXTUALLY EXACT_MATCH ~"characters[id].AC.details"~ ~"B24UI_ACDetails(id)"~
+  REPLACE_TEXTUALLY EXACT_MATCH ~"characters[id].THAC0.details"~ ~"B24UI_AttackDetails(id)"~
+  // Multiclasses: the XP bar shows the real XP (B24MULTI.lua keeps it; the engine has less).
+  REPLACE_TEXTUALLY EXACT_MATCH ~"getPercent(characters[currentID].level.xp, characters[currentID].level.nextLvlXp)"~ ~"B24MC_XPPercent(currentID)"~
+  BUT_ONLY
+
+// Character record: a Features tab (tab 10, unused by the engine; text from B24UI.FeaturesText).
+// The row of Stats and Biography above the record's text panel has room for two buttons only:
+// Stats, Biography and Features share the panel's width (the engine shrinks button texts to fit).
+COPY_EXISTING ~ui.menu~ ~override~
+  SET b24_tx = 0 - 1
+  REPLACE_EVALUATE CASE_SENSITIVE ~enabled[ %TAB%]+"showJustText"[ %TAB%%WNL%%LNL%]+area[ %TAB%]+\([0-9]+\)[ %TAB%]+[0-9]+[ %TAB%]+\([0-9]+\)[ %TAB%]+[0-9]+[ %TAB%%WNL%%LNL%]+text[ %TAB%]+lua "helpTextString"~ BEGIN
+    PATCH_IF (b24_tx < 0) BEGIN
+      SET b24_tx = MATCH1
+      SET b24_tw = MATCH2
+    END
+  END ~%MATCH0%~
+  SET b24_gap = 8
+  SET b24_bw = (b24_tw - 2 * b24_gap) / 3
+  SPRINT b24_copy ~~
+  PATCH_IF (b24_tx >= 0) BEGIN
+    REPLACE_EVALUATE CASE_SENSITIVE ~area [0-9]+ \([0-9]+\) [0-9]+ \([0-9]+\)\([^}]*\)action "currentTab = 6; updateAttrTable()"~ BEGIN
+    END ~area %b24_tx% %MATCH1% %b24_bw% %MATCH2%%MATCH3%action "currentTab = 6; updateAttrTable()"~
+    REPLACE_EVALUATE CASE_SENSITIVE ~\(button[ %TAB%%WNL%%LNL%]*{[^}]*\)area [0-9]+ \([0-9]+\) [0-9]+ \([0-9]+\)\([^}]*\)action "currentTab = 7; updateAttrTable()"\([^}]*}\)~ BEGIN
+      SET b24_bx = b24_tx + b24_bw + b24_gap
+      SET b24_fx = b24_tx + 2 * (b24_bw + b24_gap)
+      SPRINT b24_copy ~%MATCH1%area %b24_fx% %MATCH2% %b24_bw% %MATCH3%%MATCH4%action "currentTab = 10; updateAttrTable()"%MATCH5%~
+      INNER_PATCH_SAVE b24_copy ~%b24_copy%~ BEGIN
+        REPLACE_TEXTUALLY CASE_SENSITIVE ~text[ %TAB%]+'BIOGRAPHY_LABEL'~ ~text lua "B24UI_FeaturesTabLabel()"~
+      END
+    END ~%MATCH1%area %b24_bx% %MATCH2% %b24_bw% %MATCH3%%MATCH4%action "currentTab = 7; updateAttrTable()"%MATCH5%
+	%b24_copy%~
+  END
+  PATCH_IF ((b24_tx < 0) OR (INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~B24UI_FeaturesTabLabel~) < 0)) BEGIN
+    PATCH_PRINT ~BG2024 warning: the character record in UI.MENU has an unexpected layout; no Features tab.~
+  END
+  BUT_ONLY
+
+// The mod's own icons for the spells and innates made above.
+LAF b24_install_icons END

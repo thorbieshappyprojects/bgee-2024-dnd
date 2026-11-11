@@ -1,0 +1,17 @@
+2DA V1.0
+0
+                LEVEL1  EVEN    ODD     CLASSES
+HPWAR           10      6       6       Fighter,Ranger,Paladin_(d10)
+HPBARB          12      7       7       Barbarian,Dwarven_Defender_(d12)
+HPPRS           8       5       5       Cleric,Druid,Shaman_(d8)
+HPROG           8       5       5       Thief,Bard_(d8)
+HPMONK          8       5       5       Monk_(d8)
+HPWIZ           6       4       4       Mage,Sorcerer_(d6)
+HPDD            7       5       5       Dragon_Disciple_(d6+1)
+HPFM            8       5       5       Fighter/Mage_(d10+d6)/2
+HPFC            9       6       5       Fighter/Cleric,Fighter/Druid,Cleric/Ranger_(d10+d8)/2
+HPFT            9       6       5       Fighter/Thief_(d10+d8)/2
+HPFMT           8       5       5       Fighter/Mage/Thief_(d10+d6+d8)/3
+HPMT            7       5       4       Mage/Thief_(d6+d8)/2
+HPCM            7       5       4       Cleric/Mage_(d8+d6)/2
+HPCT            8       5       5       Cleric/Thief_(d8+d8)/2

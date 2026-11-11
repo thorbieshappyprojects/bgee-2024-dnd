@@ -1,0 +1,173 @@
+# Icon motifs for docs/Icon prompts.md (tools/icon-prompts.pl builds the file from this list).
+# Format: RESREF | Name | Group | motif (subject, action, colors) | optional: same as RESREF
+B24ADREN | Adrenaline Rush | Species and origin feats | a roaring orc warrior's face with glowing red eyes, red veins pulsing on the temples, speed streaks behind the head; blood red and dark green
+B24HEALR | Battle Medic | Species and origin feats | a battlefield healer's hands wrapping a clean linen bandage around a wounded forearm, a small leather satchel of herbs beside it; earthy brown, white and soft green glow
+B24HEALH | Healing Hands | Species and origin feats | two open hands radiating soft golden-white light, tiny white feathers drifting upward from the palms; gold and pearl white
+B24GLFIR | Fire's Burn | Species and origin feats | a huge grey stone-skinned fist wreathed in roaring flames; fiery orange and red on charcoal
+B24GLFRO | Frost's Chill | Species and origin feats | a giant's hand gripping a battleaxe whose blade is coated in thick frost and jagged ice shards; pale icy blue and white
+B24GLHIL | Hill's Tumble | Species and origin feats | a massive earthen club slamming into the ground, a small figure toppling backward in a burst of dust and pebbles; ochre and brown
+B24GLSTO | Stone's Endurance | Species and origin feats | a muscular forearm turning to grey granite as a sword blade breaks against it, chips of stone flying; grey stone with a faint blue sheen
+B24GLSTM | Storm's Thunder | Species and origin feats | a raised giant's fist crackling with a branching lightning bolt that arcs up into dark storm clouds; electric white-blue on deep slate
+B24SREST | Short Rest | Core rules | a small campfire at dusk with a rolled bedroll and a sword leaning against a log, thin smoke curling upward; warm orange firelight on deep blue
+B24TURNS | Turn-Based Combat | Core rules | an hourglass standing on a battle map with small carved figures lined up in a row before it; gold sand, dark wood and parchment
+B24TEND | End Turn | Core rules | an hourglass laid on its side with the sand stopped, a hand resting flat beside it; dull gold and grey
+B24ESCGR | Escape Grapple | Core rules | a hand wrenching free from a larger gripping hand, the fingers slipping apart with a burst of motion lines; tan skin and bright orange
+B24SWIND | Second Wind | Class features | a battle-worn warrior's silhouette taking a deep breath, a swirl of pale green wind coiling around the chest and lifting the cloak; steel grey and soft green
+B24ASURG | Action Surge | Class features | a sword caught mid-swing leaving three golden afterimage arcs, sparks bursting at the tip; bright gold on dark steel
+B24TMAST | Tactical Master | Class features | a sword, an axe and a mace crossed in a star pattern around a small glowing compass rose; polished steel and crimson
+B24ASI | Ability Score Improvement | Class features | a glowing golden arrow rising out of a carved stone pedestal set with six small colored gemstones; gold and deep blue
+B24FSTY | Fighting Style | Class features | a sword and a round shield crossed in front of an old parchment sketch of a fencing stance; steel, brown parchment and red
+B24WMAS | Weapon Mastery | Class features | a single gleaming longsword standing upright, a line of glowing runes running along its fuller; polished steel with cold blue light
+B24SUBC | Subclass | Class features | a stone path that splits into three glowing branches like a crossroads, seen from above; gold light on dark earth
+B24RAGE | Rage | Class features | a screaming barbarian's face with red war paint and glowing red eyes, a crimson aura flaring around the head; blood red and black
+B24RECKL | Reckless Attack | Class features | a huge two-handed greataxe swung overhead in a wild arc, red sparks and torn air trailing the blade; red and dark steel
+B24INTIM | Intimidating Presence | Class features | a towering horned warrior silhouette casting an enormous dark shadow, tiny figures fleeing at its feet; black and blood red
+B24CUNNG | Cunning Action | Class features | a hooded rogue dashing to the side, long motion blur streaks behind, a dagger glinting in one hand; charcoal grey with yellow highlights
+B24STAIM | Steady Aim | Class features | a close-up of a drawn crossbow with an eye aligned along the bolt, a faint glowing aiming circle at the tip; wood brown and gold
+B24EXPRT | Expertise | Class features | a master's hands holding a set of lockpicks above an open book, a small bright star shining over them; deep blue and gold
+B24FLURY | Flurry of Blows | Class features | several bare fists punching outward in a fan, orange impact bursts and motion lines; tan skin tones and fiery orange
+B24PDEF | Patient Defense | Class features | a monk in a calm defensive stance with palms raised, a translucent blue circle of calm around the body; serene blue and white
+B24STEPW | Step of the Wind | Class features | a bare foot leaping off swirling white wind currents, loose cloth fluttering; white and pale teal
+B24STUN | Stunning Strike | Class features | a fist striking a forehead, a bright shockwave ring and small yellow stars bursting from the impact; yellow and orange
+B24UMETA | Uncanny Metabolism | Class features | a meditating monk with a glowing amber spiral at the belly, warm energy rising up the spine; amber and bronze
+B24WHOLE | Wholeness of Body | Class features | a seated meditating figure outlined in soft green light, a glowing lotus flower floating before the chest; green and white
+B24SUPDF | Superior Defense | Class features | a monk silhouette inside a shimmering crystalline aura, arrows and blades bouncing off its surface; violet and silver
+B24QPALM | Quivering Palm | Class features | an open palm pressed against a chest, concentric violet vibration rings rippling outward from the touch; deep violet
+B24LOH | Lay on Hands | Class features | an armored gauntlet laid gently on a wounded shoulder, warm golden light flowing from the palm; gold and white
+B24SMITE | Divine Smite | Class features | a longsword striking downward, the blade wreathed in blinding holy light and a burst of golden rays; brilliant gold and white
+B24SACWP | Sacred Weapon | Class features | a longsword raised high, its blade glowing with radiant white light that spills over the hilt; white and gold
+B24ABJUR | Abjure Foes | Class features | a holy symbol held aloft casting a cone of golden light, dark shadowy shapes recoiling from it; gold on deep blue
+B24NIMBS | Holy Nimbus | Class features | an armored paladin silhouette inside a blazing ring of sunlight, rays streaming outward; brilliant gold
+B24HMARK | Hunter's Mark | Class features | a glowing green hunter's sigil hovering over the silhouette of a running stag; emerald green on dark forest
+B24TIRLS | Tireless | Class features | a ranger's worn leather boots striding along a forest path, a green-gold glow of vigor around them; green and brown
+B24NVEIL | Nature's Veil | Class features | a ranger fading into foliage, half of the body dissolving into swirling green leaves; leaf green
+B24BINSP | Bardic Inspiration | Class features | a lute with glowing musical notes spiraling upward from its strings; royal purple and gold
+B24DSPRK | Divine Spark | Class features | a single bright spark of light floating between two cupped hands, one half glowing healing green, the other radiant gold; green, gold and white
+B24TURNU | Turn Undead | Class features | a raised holy symbol blazing with light, skeletal hands recoiling and crumbling in its glare; gold and sickly green
+B24PRSLF | Preserve Life | Class features | a glowing heart of warm light sending rays to three small kneeling figures; warm white and green
+B24LAID | Land's Aid | Class features | a ring of thorny vines bursting from cracked earth, a soft green healing glow in the center of the ring; dark green and brown
+B24INSOR | Innate Sorcery | Class features | a sorcerer's hand with veins glowing with arcane energy, purple sparks crackling between the fingers; purple and magenta
+B24OPTN | Class Feature | Class features | an ornate golden key set with a glowing gem, hovering above two diverging paths; gold
+B24CANTP | Cantrip | Class features | a small dancing spark of magic floating above an outstretched fingertip, a thin trail of light; bright blue and white
+B24SPBK | Spellbook | Class features | an open leather-bound spellbook with one freshly glowing page, a quill writing glowing runes onto it; brown leather and arcane blue
+B24HWORD | Healing Word | Spells | a softly glowing rune of green-white light flying like a small bird toward a distant figure; green and white
+B24HWBRD | Healing Word (bard copy) | Spells | - | B24HWORD
+B24CWBRD | Cure Wounds (bard copy) | Spells | a hand pressed on a bleeding wound that closes under green-white light; green, white and skin tones
+B24GBOLT | Guiding Bolt | Spells | a bolt of brilliant white-gold light streaking diagonally toward a target, sparkles trailing it; white and gold on deep blue
+B24THWAV | Thunderwave | Spells | a concussive blue-grey shockwave ring blasting outward from a caster's open palms, dust and debris thrown back; slate blue and white
+B24THWVD | Thunderwave (druid copy) | Spells | - | B24THWAV
+B24SHATR | Shatter | Spells | a crystal sphere exploding into sharp shards, visible sound-wave rings rippling out; silver and icy blue
+B24SPGRD | Spirit Guardians | Spells | translucent angelic spirits holding spears, circling around a central figure; radiant gold and white
+B24MHWRD | Mass Healing Word | Spells | several small glowing green-white runes flying outward in all directions toward small figures; green and white
+B24MHWBD | Mass Healing Word (bard copy) | Spells | - | B24MHWRD
+B24CACID | Acid Splash | Cantrips | a globe of bubbling green acid bursting apart, droplets splashing outward and smoking; acid green
+B24CCHIL | Chill Touch | Cantrips | a ghostly skeletal hand made of pale mist reaching forward; pale green and white on black
+B24CFIRE | Fire Bolt | Cantrips | a streaking bolt of fire with a white-hot core and a trail of embers; orange, red and yellow
+B24CPOIS | Poison Spray | Cantrips | a jet of noxious green-yellow mist spraying from an open palm; sickly green and yellow
+B24CFROS | Ray of Frost | Cantrips | a pale blue beam shooting forward, ice crystals forming along its length; icy blue and white
+B24CSHOC | Shocking Grasp | Cantrips | an outstretched hand crackling with branching white-blue lightning arcs; electric blue and white
+B24CBURS | Sorcerous Burst | Cantrips | an orb of raw magic exploding in sparks, streaks of red, blue and green flying outward; multicolored on dark
+B24CSACR | Sacred Flame | Cantrips | a column of radiant white-gold flame descending from above onto a small figure; gold and white
+B24CTOLL | Toll the Dead | Cantrips | a spectral iron bell swinging and tolling, sickly green ripples of sound spreading out; grey iron and sickly green
+B24CWORD | Word of Radiance | Cantrips | a burst of golden light radiating in a ring from a raised holy symbol; brilliant gold
+B24CFLAM | Produce Flame | Cantrips | a small steady flame flickering in an open palm, lighting the fingers from below; warm orange
+B24CTHRN | Thorn Whip | Cantrips | a thorny green vine lashing through the air like a whip; deep green and brown
+B24CWISP | Starry Wisp | Cantrips | a small mote of starlight with a sparkling trail crossing a night sky; silver-white on deep blue
+B24CMOCK | Vicious Mockery | Cantrips | a grinning jester's mask with violet psychic sparks crackling around it; violet and white
+B24PICK | Class Feature Choice | Class features | an ornate scroll unrolling with three glowing wax seals; parchment and gold
+B24MTRIP | Trip Attack | Subclass features | a sword sweeping the legs of a falling enemy, a small glowing golden die in the lower corner; steel and gold
+B24MPUSH | Pushing Attack | Subclass features | a shield bash shoving an enemy backward with a shockwave, a small glowing golden die in the lower corner; steel and gold
+B24MMENA | Menacing Attack | Subclass features | a sword strike throwing off a menacing red skull-shaped spark, a small glowing golden die in the lower corner; steel, red and gold
+B24MDISA | Disarming Attack | Subclass features | a sword knocking a weapon spinning out of an enemy's hand, a small glowing golden die in the lower corner; steel and gold
+B24MDIST | Distracting Strike | Subclass features | a sword feint flashing light toward an enemy's eyes while an ally's spear comes in from the side, a small glowing golden die in the lower corner; steel and gold
+B24MGOAD | Goading Attack | Subclass features | a sword pointing at a snarling enemy, red taunting sparks between them, a small glowing golden die in the lower corner; steel, red and gold
+B24MFEIN | Feinting Attack | Subclass features | a sword thrust shown as two overlapping images, one false and one real, a small glowing golden die in the lower corner; steel and gold
+B24MPREC | Precision Attack | Subclass features | a sword tip striking the exact center of a tiny glowing bullseye, a small glowing golden die in the lower corner; steel and gold
+B24MLUNG | Lunging Attack | Subclass features | a fencer lunging far forward with a long motion streak behind, a small glowing golden die in the lower corner; steel and gold
+B24MSWEE | Sweeping Attack | Subclass features | a wide arcing sword slash cutting across two enemies at once, a small glowing golden die in the lower corner; steel and gold
+B24MPARR | Parry | Subclass features | two blades crossing with sparks bursting at the point of contact, a small glowing golden die in the lower corner; steel and gold
+B24MRALY | Rally | Subclass features | a raised war banner and a curved horn, a warm golden glow around them, a small glowing golden die in the lower corner; red cloth and gold
+B24MEVAS | Evasive Footwork | Subclass features | armored boots sidestepping with faint afterimages, a small glowing golden die in the lower corner; steel and gold
+B24MCOMM | Commander's Strike | Subclass features | a commander's gauntlet pointing forward while an ally's sword strikes past it, a small glowing golden die in the lower corner; steel and gold
+B24PSTRK | Psionic Strike | Subclass features | a sword blade glowing with violet psionic energy at the moment of impact, a burst of violet force; violet and steel
+B24PGMND | Guarded Mind | Subclass features | the silhouette of a head with a glowing violet shield around the mind; violet on dark
+B24PBULW | Bulwark of Force | Subclass features | a translucent violet dome of force over a small group of figures, its surface shimmering; violet
+B24WTBRN | Branches of the Tree | Subclass features | glowing green-gold tree branches lashing out of the ground and snaring a figure; green and gold
+B24ZWARG | Warrior of the Gods | Subclass features | a battered warrior bathed in a beam of divine light from above, wounds closing; gold and red
+B24ZPRES | Zealous Presence | Subclass features | a roaring warrior with a golden divine aura, a war-cry shockwave spreading from the mouth; gold and crimson
+B24GBEGU | Beguiling Magic | Subclass features | a beautiful fey mask in a shimmering pink haze, a frightened eye peering out from behind it; rose pink and violet
+B24GMANT | Mantle of Inspiration | Subclass features | a shimmering cloak billowing outward, sparkles of pink-gold fey light streaming from its hem; pink and gold
+B24GMAJE | Mantle of Majesty | Subclass features | a radiant fey crown floating above a figure, beams of soft pink light; pink, gold and white
+B24GCMND | Command | Subclass features | a hand pointing downward with a regal pink glow, a small figure kneeling before it; pink and gold
+B24GUNBR | Unbreakable Majesty | Subclass features | a regal figure behind a radiant crystalline aura, a thrown spear shattering against it; pink, white and silver
+B24LRADI | Radiance of the Dawn | Subclass features | a sunrise bursting from a raised holy symbol, golden rays driving back darkness; brilliant gold and orange
+B24LWARD | Warding Flare | Subclass features | a blinding flash of white light erupting from the face of a shield; white and gold
+B24LCORO | Corona of Light | Subclass features | a blazing halo ring of sunlight hovering in the darkness; gold on black
+B24TBLES | Blessing of the Trickster | Subclass features | a hooded figure fading into shadow, a sly green sparkle at the fingertips; dark grey and green
+B24TDUPL | Invoke Duplicity | Subclass features | a cloaked figure and its translucent shimmering illusory double standing side by side; dark grey and pale cyan
+B24WGSTR | Guided Strike | Subclass features | a sword guided by a ghostly divine hand wrapped around the hilt, golden light along the blade; gold and steel
+B24WGBLS | War God's Blessing | Subclass features | a war god's huge gauntleted hand blessing an ally's raised sword with red-gold fire; red and gold
+B24WPRST | War Priest | Subclass features | a war mace and a holy symbol crossed, a red-gold glow behind them; red, gold and steel
+B24SWRAT | Wrath of the Sea | Subclass features | a churning sea-green wave curling around a figure, salt spray and foam flying; sea green and white
+B24STARC | Starry Form: Archer | Subclass features | a glowing constellation shaped like an archer drawing a bow, bright stars joined by thin lines; silver stars on deep blue
+B24STCHL | Starry Form: Chalice | Subclass features | a glowing constellation shaped like a chalice, bright stars joined by thin lines; silver stars on deep blue
+B24STDRG | Starry Form: Dragon | Subclass features | a glowing constellation shaped like a coiled dragon, bright stars joined by thin lines; silver stars on deep blue
+B24STARW | Luminous Arrow | Subclass features | an arrow made of starlight streaking diagonally, a sparkling trail behind it; silver-white on deep blue
+B24MHARM | Hand of Harm | Subclass features | a striking hand wreathed in dark necrotic purple-black energy; purple and black
+B24MHHEL | Hand of Healing | Subclass features | an open hand touching a figure with warm green healing light; green and white
+B24MSART | Shadow Arts | Subclass features | a monk dissolving into darkness, wisps of shadow rising from the body; black and deep blue
+B24MCLOA | Cloak of Shadows | Subclass features | a figure wrapped in a cloak of living shadow, only the eyes faintly visible; black and dark violet
+B24MSSTP | Shadow Step | Subclass features | a figure stepping out of one pool of shadow into another a short distance away; black and deep blue
+B24MATTN | Elemental Attunement | Subclass features | two fists wrapped in swirling icy wind and frost; icy blue and white
+B24MBRST | Elemental Burst | Subclass features | an explosion of icy elemental energy bursting outward from a single point; icy blue and white
+B24GINSP | Inspiring Smite | Subclass features | a sword strike bursting into a golden laurel wreath of light; gold and white
+B24ANWRA | Nature's Wrath | Subclass features | spectral green vines erupting from the ground and binding a figure; ghostly green
+B24VVOWE | Vow of Enmity | Subclass features | a glowing red sigil burning over an enemy's silhouette, a sword pointing at it; red and black
+B24GLEGD | Living Legend | Subclass features | a heroic armored silhouette standing in a golden laurel aura; gold
+B24AELDR | Elder Champion | Subclass features | a figure crowned with antlers of green light and blossoming flowers; green, gold and white
+B24VANGL | Avenging Angel | Subclass features | dark feathered wings unfolding behind an armored figure; black and dark red
+B24BEAST | Primal Companion | Subclass features | a spectral wolf howling, wrapped in green primal energy; green and silver-grey
+B24PSBLA | Psychic Blades | Subclass features | a translucent violet blade of psychic energy materializing in a hand; violet
+B24PSVEL | Psychic Veil | Subclass features | a figure fading behind a shimmering violet veil; violet
+B24FOM1 | Create Spell Slot (1) | Subclass features | a violet arcane gem cracking open into a glowing crystal sphere, one small glowing point of light beneath it; violet and white
+B24FOM2 | Create Spell Slot (2) | Subclass features | a violet arcane gem cracking open into a glowing crystal sphere, two small glowing points of light beneath it; violet and white
+B24FOM3 | Create Spell Slot (3) | Subclass features | a violet arcane gem cracking open into a glowing crystal sphere, three small glowing points of light beneath it; violet and white
+B24FOM4 | Create Spell Slot (4) | Subclass features | a violet arcane gem cracking open into a glowing crystal sphere, four small glowing points of light beneath it; violet and white
+B24FOM5 | Create Spell Slot (5) | Subclass features | a violet arcane gem cracking open into a glowing crystal sphere, five small glowing points of light beneath it; violet and white
+B24AREVL | Revelation in Flesh | Subclass features | an eye opening in the palm of a tentacled hand; sickly purple and green
+B24AWARP | Warping Implosion | Subclass features | space collapsing inward into a black-violet singularity, debris spiraling in; black and violet
+B24CBALN | Restore Balance | Subclass features | a golden clockwork balance scale with both pans perfectly level; brass and gold
+B24CBAST | Bastion of Law | Subclass features | a shield built from interlocking brass gears; brass and bronze
+B24CTRAN | Trance of Order | Subclass features | a meditating figure inside slowly rotating brass clockwork rings; brass and pale blue
+B24CCAVL | Clockwork Cavalcade | Subclass features | spectral brass clockwork horses charging forward; brass and gold
+B24WTIDE | Tides of Chaos | Subclass features | a swirling vortex of chaotic multicolored magic; multicolored on dark
+B24PORTN | Portent | Subclass features | two dice floating before a glowing all-seeing eye; arcane blue and gold
+B24THEYE | The Third Eye | Subclass features | a glowing third eye opening on a forehead; arcane blue
+B24GDURB | Speedy Recovery | Feats | a hardy warrior shrugging off wounds, a green glow of vitality around the body; green and steel
+B24GGRAP | Grapple | Feats | two strong hands locking an opponent's arm in a grapple; skin tones and leather brown
+B24GTELE | Telekinetic Shove | Feats | an outstretched hand pushing a figure backward with a translucent rippling wave of force; pale blue
+B24MMCAR | Careful Spell | Class features | a glowing violet spell orb held inside two cupped hands that shield a small figure behind them from its sparks; violet and soft gold
+B24MMEMP | Empowered Spell | Class features | a crackling arcane fireball swelling larger, extra jagged energy bursting from its surface; deep violet and orange
+B24MMEXT | Extended Spell | Class features | an arcane rune circle stretched long like a ribbon unrolling through the air, an hourglass motif at its center; violet and silver
+B24MMHEI | Heightened Spell | Class features | a spell sigil blazing intensely above an outstretched palm, sharp rays piercing downward; white-hot violet on black
+B24MMQUI | Quickened Spell | Class features | a spell rune streaking forward with motion blur lines like a shooting star; violet and electric blue
+B24MMSEE | Seeking Spell | Class features | a glowing magical bolt curving around an obstacle toward a target, a bright trail behind it; violet and gold
+B24MMTRA | Transmuted Spell | Class features | a single orb of energy split into four colored quarters of fire, frost, lightning and acid swirling into each other; red, pale blue, white and green
+B24INSO2 | Innate Sorcery (Sorcery Incarnate) | Class features | a sorcerer's silhouette blazing with arcane energy from within, sorcery points like violet sparks spiraling inward; violet and gold
+B24DRWNG | Dragon Wings | Subclass features | great leathery dragon wings unfurling from a sorcerer's back, scales glinting; deep red and bronze
+B24CDIVI | Divine Intervention | Class features | a beam of radiant light breaking through dark clouds onto a kneeling cleric with raised arms; gold and white on dark blue
+B24OVCHN | Overchannel | Subclass features | a wizard's hand overflowing with uncontrolled arcane lightning, veins glowing as the power hurts; electric blue and dark red
+B24WCOMP | Wild Companion | Class features | a translucent spirit wolf made of green light padding beside a druid's staff; emerald green and silver
+B24WRES1 | Wild Resurgence: Spell Slot to Wild Shape | Class features | a glowing spell rune dissolving into the silhouette of a leaping beast; green and violet
+B24WRES2 | Wild Resurgence: Wild Shape to Spell Slot | Class features | the silhouette of a beast dissolving into a glowing spell rune; violet and green
+B24NSANC | Nature's Sanctuary | Subclass features | a ring of spectral trees and roots rising around a small group of figures, sheltering them; forest green and gold light
+B24NMAGI | Nature Magician | Class features | an ancient druid's hands weaving vines and leaves into a glowing arcane circle; green and gold
+B24RCPOI | Cunning Strike: Poison | Class features | a dagger blade dripping with thick green poison; dark steel and toxic green
+B24RCTRP | Cunning Strike: Trip | Class features | a booted foot sweeping an opponent's legs out from under them; leather brown and grey
+B24RCWTH | Cunning Strike: Withdraw | Class features | a cloaked rogue leaping backward out of reach in a swirl of shadow; dark grey and deep blue
+B24RCDAZ | Devious Strike: Daze | Class features | a stunned face with small spinning stars circling the head; pale yellow and purple
+B24RCKNO | Devious Strike: Knock Out | Class features | a dagger pommel striking the back of a head, a burst of white impact lines; steel and white
+B24RCOBS | Devious Strike: Obscure | Class features | a rogue flinging a cloud of dark dust into an enemy's eyes; charcoal and grey
+B24MULTM | Hand of Ultimate Mercy | Subclass features | a monk's open hand glowing with soft white light over a fallen figure, life returning as golden motes; white and gold
+B24WTAME | Tamed Surge | Subclass features | a wild swirl of chaotic multicolored magic held still inside a sorcerer's grasp; rainbow colors on black
+B24IPHAN | Phantasmal Creatures | Subclass features | a translucent shimmering wolf made of illusion, its edges dissolving into mist; pale lavender and silver

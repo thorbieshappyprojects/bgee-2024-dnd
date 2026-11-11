@@ -1,0 +1,22 @@
+# Portrait icon motifs for docs/Portrait icon prompts.md (perl tools/icon-prompts.pl --portrait builds
+# the file from this list). Format: FILE | Name | Group | motif (one simple symbol, colors)
+B24PCONC | Concentrating | Core rules | the side profile of a head with a bright glowing ring circling the brow; violet ring on a pale grey head
+B24PEXHA | Exhaustion | Core rules | a half-closed drooping eye with heavy dark bags beneath it; dull grey-brown with a pale blue tear
+B24PPRON | Prone | Core rules | a small stick figure lying flat on its back on a ground line; tan figure, brown ground
+B24PGRAP | Grappled | Core rules | a large clenched hand gripping a smaller wrist; tan skin with dark orange outline
+B24PREST | Restrained | Core rules | a heavy iron chain bent into a tight closed loop; steel grey with rust brown
+B24PTHP | Temporary Hit Points | Core rules | a red heart covered by a translucent pale blue shield shape; red and light blue
+B24PRAGE | Raging | Barbarian | a snarling face with bared teeth and blazing eyes; crimson red with yellow eyes
+B24PRECK | Reckless Attack | Barbarian | a two-handed axe tilted diagonally with a jagged red spark at its edge; dark steel and bright red
+B24PHMRK | Hunter's Mark | Ranger | a target ring with a crosshair and an arrowhead at its center; forest green and white
+B24PBINS | Bardic Inspiration | Bard | a single musical note with a small star spark above it; gold on deep blue
+B24PSMIT | Divine Smite ready | Paladin | a sword pointing straight down with a burst of light at its tip; bright gold and white
+B24PSACW | Sacred Weapon | Paladin | an upright sword blade wrapped in a white halo of holy light; white and pale gold
+B24PNIMB | Holy Nimbus | Paladin | a radiant sun disc with short straight rays; bright gold and white
+B24PDODG | Dodging | Monk | a small figure leaning to the side with two fading afterimages behind it; pale blue-grey
+B24PSTAR | Starry Form | Druid | three bright stars joined by thin lines like a constellation; silver-white on indigo
+B24PINSO | Innate Sorcery | Sorcerer | a swirling spiral flame; violet core with electric blue edges
+B24PPORT | Portent | Wizard (Diviner) | a crystal ball with a swirl of golden mist inside; cyan glass and gold
+B24PDYIN | Dying | Core rules | a small skull with a single drop of blood falling from it; bone white and deep red
+B24PSTAB | Stable | Core rules | a heart with a short flat heartbeat line running through it; muted red heart, pale green line
+B24PTURN | Your turn | Core rules | an hourglass with glowing golden sand running through it; gold sand in a dark wooden frame

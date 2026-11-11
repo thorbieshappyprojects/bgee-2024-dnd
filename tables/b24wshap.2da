@@ -1,0 +1,16 @@
+2DA V1.0
+*
+                      RES       TIER  ANIM    ICON      AC  STR DEX CON ATK  DICE  BONUS  TYPE  APR  PRONE  POISON  TRAIT     RESIST
+WOLF                  B24WFWOL  1     0x7B00  SPIN110B  12  14  15  12  4    1d6   2      1     1    3      *       PACK      *
+PANTHER               B24WFPAN  1     0x7F0A  SPCL621C  13  14  16  10  5    1d6   3      3     1    0      *       *         *
+GIANT_WOLF_SPIDER     B24WFGWS  1     0x7A00  SPCL632B  13  12  16  13  5    1d4   3      1     1    0      2d4     *         *
+BOAR                  B24WFBOA  1     0xE27F  SPCL621C  11  13  11  14  3    1d6   1      1     1    0      *       BLOODIED  *
+GIANT_VENOMOUS_SNAKE  B24WFGVS  1     0x7F13  SPCL621C  14  10  18  13  6    1d4   4      1     1    0      1d8     *         *
+BLACK_BEAR            B24WFBBR  2     0x7200  SPIN111B  11  15  12  14  4    1d6   2      3     2    0      *       *         *
+WARHORSE              B24WFWHR  2     0xB100  SPCL621C  11  18  12  13  6    2d4   4      2     1    0      *       *         *
+BROWN_BEAR            B24WFBRB  3     0x7201  SPIN107B  11  17  12  15  5    1d6   3      3     2    4      *       *         *
+DIRE_WOLF             B24WFDWO  3     0x7B02  SPIN110B  14  17  15  15  5    1d10  3      1     1    4      *       PACK      *
+GIANT_SPIDER          B24WFGSP  3     0x7A01  SPCL632B  14  14  16  12  5    1d8   3      1     1    0      2d6     *         *
+TIGER                 B24WFTIG  3     0x7F0B  SPCL621C  13  17  16  14  5    2d6   3      3     1    4      *       *         *
+POLAR_BEAR            B24WFPBR  4     0x7203  SPIN107B  12  20  14  16  7    1d8   5      3     2    0      *       *         COLD
+GIANT_BOAR            B24WFGBO  4     0xE265  SPCL621C  13  17  10  16  5    2d6   3      1     1    0      *       BLOODIED  *

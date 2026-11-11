@@ -1,0 +1,24 @@
+2DA V1.0
+0
+        NAME              CATEGORY  LIGHT  FINESSE  WEAPON  REACH
+89      BASTARD_SWORD     MARTIAL   0      0        LONGSWORD  0
+90      LONG_SWORD        MARTIAL   0      0        LONGSWORD  0
+91      SHORT_SWORD       MARTIAL   1      1        SHORTSWORD  0
+92      AXE               MARTIAL   0      0        BATTLEAXE  0
+93      TWO_HANDED_SWORD  MARTIAL   0      0        GREATSWORD  0
+94      KATANA            MARTIAL   0      0        LONGSWORD  0
+95      SCIMITAR          MARTIAL   1      1        SCIMITAR  0
+96      DAGGER            SIMPLE    1      1        DAGGER  0
+97      WAR_HAMMER        MARTIAL   0      0        WARHAMMER  0
+98      SPEAR             SIMPLE    0      0        SPEAR  0
+99      HALBERD           MARTIAL   0      0        HALBERD  1
+100     FLAIL_MORNINGSTAR MARTIAL   0      0        FLAIL  0
+101     MACE              SIMPLE    0      0        MACE  0
+102     QUARTERSTAFF      SIMPLE    0      0        QUARTERSTAFF  0
+103     CROSSBOW          SIMPLE    0      0        LIGHT_CROSSBOW  0
+104     LONG_BOW          MARTIAL   0      0        LONGBOW  0
+105     SHORT_BOW         SIMPLE    0      0        SHORTBOW  0
+106     DART              SIMPLE    0      1        DART  0
+107     SLING             SIMPLE    0      0        SLING  0
+108     BLACKJACK         SIMPLE    1      0        CLUB  0
+115     CLUB              SIMPLE    1      0        CLUB  0

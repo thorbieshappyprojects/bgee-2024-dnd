@@ -1,0 +1,129 @@
+// Monster math pass: every creature that is not a joinable party member gets 2024-scaled AC,
+// attack bonus, ability scores and hit points. Damage, abilities and scripts stay unchanged.
+// Saving throws need no file change: B24SAVE.lua computes them from ability scores at runtime.
+//
+// The formulas are tuned in playtesting through these parameters.
+
+OUTER_SET b24_mon_ac_min_5e = 10        // 2024 AC range after conversion
+OUTER_SET b24_mon_ac_max_5e = 22
+OUTER_SET b24_mon_ability_est = 3       // assumed attack ability modifier
+OUTER_SET b24_mon_attack_cap = 14       // highest total attack bonus
+OUTER_SET b24_mon_hp_per_level = 7      // HP per level estimate for creatures without levels
+OUTER_SET b24_mon_hp_percent = 150      // hit points in percent of the original (tools/balance.pl:
+                                        // 150 keeps fights about as hard as in vanilla)
+
+// Joinable NPCs keep their files; the NPC component converts them.
+COPY_EXISTING ~pdialog.2da~ ~override~
+  COUNT_2DA_ROWS 2 rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 2 npc
+    TO_UPPER npc
+    SET $b24_party_npc(~%npc%~) = 1
+  END
+BUT_ONLY
+
+COPY_EXISTING_REGEXP GLOB ~^.+\.cre$~ ~override~
+  SPRINT sig ~~
+  PATCH_IF (SOURCE_SIZE > 0x2d3) BEGIN
+    READ_ASCII 0x00 sig (8)
+  END
+  PATCH_IF (~%sig%~ STRING_EQUAL ~CRE V1.0~) BEGIN
+    READ_ASCII 0x280 death_var (32) NULL
+    TO_UPPER death_var
+    READ_BYTE 0x270 ea
+    SPRINT resref ~%SOURCE_RES%~
+    TO_UPPER resref
+    SET skip = 0
+    PATCH_IF (VARIABLE_IS_SET $b24_party_npc(~%death_var%~)) BEGIN
+      SET skip = 1
+    END
+    PATCH_IF ((ea == 2) OR (~%resref%~ STRING_MATCHES_REGEXP ~^CHARBASE~ == 0)) BEGIN
+      SET skip = 1
+    END
+
+    PATCH_IF (NOT skip) BEGIN
+      // AC: engine AC = 20 - 2024 AC, clamped to the 2024 range.
+      SET ac_min = 20 - b24_mon_ac_max_5e
+      SET ac_max = 20 - b24_mon_ac_min_5e
+      FOR (off = 0x46; off <= 0x48; off += 2) BEGIN
+        READ_SSHORT off ac
+        SET ac = (ac < ac_min) ? ac_min : ((ac > ac_max) ? ac_max : ac)
+        WRITE_SHORT off ac
+      END
+
+      // Ability scores: 18/xx becomes 18-20, nothing above 25.
+      READ_BYTE 0x238 str
+      READ_BYTE 0x239 strex
+      PATCH_IF ((str == 18) AND (strex > 0)) BEGIN
+        SET str = 18 + ((strex >= 51) ? 1 : 0) + ((strex >= 100) ? 1 : 0)
+      END
+      WRITE_BYTE 0x239 0
+      WRITE_BYTE 0x238 ((str > 25) ? 25 : str)
+      FOR (off = 0x23a; off <= 0x23e; ++off) BEGIN
+        READ_BYTE off score
+        PATCH_IF (score > 25) BEGIN
+          WRITE_BYTE off 25
+        END
+      END
+
+      // Attack bonus: proficiency by level (CR) + ability estimate, capped. The engine adds the
+      // Strength modifier itself, so THAC0 holds only the rest.
+      // Second and third class levels hold junk on single-class creatures; only multiclass
+      // CLASS.IDS values use them.
+      READ_BYTE 0x234 level
+      READ_BYTE 0x273 class
+      PATCH_IF (((class >= 7) AND (class <= 10)) OR ((class >= 13) AND (class <= 18))) BEGIN
+        READ_BYTE 0x235 l2
+        SET level = (l2 > level) ? l2 : level
+        PATCH_IF ((class == 10) OR (class == 17)) BEGIN
+          READ_BYTE 0x236 l3
+          SET level = (l3 > level) ? l3 : level
+        END
+      END
+      PATCH_IF (level <= 1) BEGIN
+        READ_SHORT 0x26 max_hp
+        SET level = (max_hp / b24_mon_hp_per_level > 1) ? (max_hp / b24_mon_hp_per_level) : 1
+      END
+      LPF b24_prof_bonus INT_VAR level max_level = 30 RET prof END
+      LPF b24_ability_mod INT_VAR score = (str > 25) ? 25 : str RET str_mod = mod END
+      SET attack = prof + ((str_mod > b24_mon_ability_est) ? str_mod : b24_mon_ability_est)
+      SET attack = (attack > b24_mon_attack_cap) ? b24_mon_attack_cap : attack
+      SET thac0 = 20 - (attack - str_mod)
+      WRITE_BYTE 0x52 ((thac0 < 1) ? 1 : ((thac0 > 25) ? 25 : thac0))
+
+      // Hit points (after the attack bonus, which estimates levels from the original HP).
+      FOR (off = 0x24; off <= 0x26; off += 2) BEGIN
+        READ_SHORT off hp
+        SET hp = (hp * b24_mon_hp_percent + 50) / 100
+        WRITE_SHORT off ((hp > 32767) ? 32767 : hp)
+      END
+    END
+
+    // Every creature, party NPCs too: the engine adds HPCONBON.2DA x level to a creature's hit
+    // points when it loads it from its file. With the 2024 Constitution modifiers a low-CON
+    // creature could arrive dead (BG:EE Xan with CON 7, downed trolls with 2 hit points); it keeps
+    // at least 1 hit point per level. Creatures at 0 (statues, corpses) stay as they are.
+    READ_BYTE 0x23d con
+    LPF b24_ability_mod INT_VAR score = con RET con_mod = mod END
+    READ_SHORT 0x24 hp
+    PATCH_IF ((con_mod < 0) AND (hp > 0)) BEGIN
+      READ_BYTE 0x234 level
+      READ_BYTE 0x235 l2
+      READ_BYTE 0x236 l3
+      READ_BYTE 0x273 class
+      PATCH_IF (((class >= 7) AND (class <= 10)) OR ((class >= 13) AND (class <= 18))) BEGIN
+        SET level = (l2 > level) ? l2 : level
+        SET level = (l3 > level) ? l3 : level
+      END
+      SET level = (level < 1) ? 1 : level
+      SET least = level * (1 - con_mod)
+      PATCH_IF (hp < least) BEGIN
+        WRITE_SHORT 0x24 least
+      END
+      READ_SHORT 0x26 max_hp
+      PATCH_IF (max_hp < least) BEGIN
+        WRITE_SHORT 0x26 least
+      END
+    END
+  END
+BUT_ONLY

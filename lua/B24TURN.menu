@@ -1,0 +1,612 @@
+-- BG 2024 Rules Mod: turn-based combat on the game screen (B24TURN.lua keeps these menus there
+-- while the game screen is up). BG2:EE gets its own button art (b24_menu_for_game).
+
+-- The switch while enemies are in sight, and End Turn while a party member has its turn (below the
+-- initiative bar).
+menu
+{
+	name 'B24_TURNBUTTON'
+	align left top
+	ignoreesc
+
+	button
+	{
+		area 80 100 230 40
+		enabled "B24TB.ButtonShown()"
+		bam GUIBUTMT
+		text lua "B24TB.ButtonText()"
+		text style "button"
+		tooltip lua "B24TB.ButtonTooltip()"
+		action "B24TB.ToggleButton()"
+	}
+	button
+	{
+		area 80 144 230 40
+		enabled "B24TB.EndTurnShown()"
+		bam GUIBUTMT
+		text lua "B24TB.EndTurnText()"
+		text style "button"
+		action "B24TB.EndTurnButton()"
+	}
+}
+
+-- The initiative order (B24TB.Tracker*): the round, then the order as it stands. Party members show
+-- their portrait, everyone else a tile with the name; the gold frame marks whose turn it is, the
+-- party has green tiles, the others red ones. Top left the place in the order, top right the
+-- initiative rolled; in the middle of the tiles without a portrait, notes (B24TB.TrackerNote).
+menu
+{
+	name 'B24_TURNTRACKER'
+	align center top
+	ignoreesc
+
+	label
+	{
+		area 0 8 80 80
+		enabled "B24TB.TrackerShown(1)"
+		fill 20 16 12 220
+		text lua "B24TB.RoundText()"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 82 6 78 84
+		enabled "B24TB.TrackerCurrent(1)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 84 8 74 80
+		enabled "B24TB.TrackerParty(1)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 84 8 74 80
+		enabled "B24TB.TrackerOther(1)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 102 10 38 60
+		enabled "B24TB.TrackerPortrait(1) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(1)"
+	}
+	label
+	{
+		area 84 70 74 18
+		enabled "B24TB.TrackerShown(1)"
+		text lua "B24TB.TrackerName(1)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 84 8 18 16
+		enabled "B24TB.TrackerShown(1)"
+		text lua "B24TB.TrackerPlace(1)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 140 8 18 16
+		enabled "B24TB.TrackerShown(1)"
+		text lua "B24TB.TrackerInitiative(1)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 84 26 74 42
+		enabled "B24TB.TrackerOther(1)"
+		text lua "B24TB.TrackerNote(1)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 164 6 78 84
+		enabled "B24TB.TrackerCurrent(2)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 166 8 74 80
+		enabled "B24TB.TrackerParty(2)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 166 8 74 80
+		enabled "B24TB.TrackerOther(2)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 184 10 38 60
+		enabled "B24TB.TrackerPortrait(2) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(2)"
+	}
+	label
+	{
+		area 166 70 74 18
+		enabled "B24TB.TrackerShown(2)"
+		text lua "B24TB.TrackerName(2)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 166 8 18 16
+		enabled "B24TB.TrackerShown(2)"
+		text lua "B24TB.TrackerPlace(2)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 222 8 18 16
+		enabled "B24TB.TrackerShown(2)"
+		text lua "B24TB.TrackerInitiative(2)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 166 26 74 42
+		enabled "B24TB.TrackerOther(2)"
+		text lua "B24TB.TrackerNote(2)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 246 6 78 84
+		enabled "B24TB.TrackerCurrent(3)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 248 8 74 80
+		enabled "B24TB.TrackerParty(3)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 248 8 74 80
+		enabled "B24TB.TrackerOther(3)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 266 10 38 60
+		enabled "B24TB.TrackerPortrait(3) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(3)"
+	}
+	label
+	{
+		area 248 70 74 18
+		enabled "B24TB.TrackerShown(3)"
+		text lua "B24TB.TrackerName(3)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 248 8 18 16
+		enabled "B24TB.TrackerShown(3)"
+		text lua "B24TB.TrackerPlace(3)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 304 8 18 16
+		enabled "B24TB.TrackerShown(3)"
+		text lua "B24TB.TrackerInitiative(3)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 248 26 74 42
+		enabled "B24TB.TrackerOther(3)"
+		text lua "B24TB.TrackerNote(3)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 328 6 78 84
+		enabled "B24TB.TrackerCurrent(4)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 330 8 74 80
+		enabled "B24TB.TrackerParty(4)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 330 8 74 80
+		enabled "B24TB.TrackerOther(4)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 348 10 38 60
+		enabled "B24TB.TrackerPortrait(4) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(4)"
+	}
+	label
+	{
+		area 330 70 74 18
+		enabled "B24TB.TrackerShown(4)"
+		text lua "B24TB.TrackerName(4)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 330 8 18 16
+		enabled "B24TB.TrackerShown(4)"
+		text lua "B24TB.TrackerPlace(4)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 386 8 18 16
+		enabled "B24TB.TrackerShown(4)"
+		text lua "B24TB.TrackerInitiative(4)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 330 26 74 42
+		enabled "B24TB.TrackerOther(4)"
+		text lua "B24TB.TrackerNote(4)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 410 6 78 84
+		enabled "B24TB.TrackerCurrent(5)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 412 8 74 80
+		enabled "B24TB.TrackerParty(5)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 412 8 74 80
+		enabled "B24TB.TrackerOther(5)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 430 10 38 60
+		enabled "B24TB.TrackerPortrait(5) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(5)"
+	}
+	label
+	{
+		area 412 70 74 18
+		enabled "B24TB.TrackerShown(5)"
+		text lua "B24TB.TrackerName(5)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 412 8 18 16
+		enabled "B24TB.TrackerShown(5)"
+		text lua "B24TB.TrackerPlace(5)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 468 8 18 16
+		enabled "B24TB.TrackerShown(5)"
+		text lua "B24TB.TrackerInitiative(5)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 412 26 74 42
+		enabled "B24TB.TrackerOther(5)"
+		text lua "B24TB.TrackerNote(5)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 492 6 78 84
+		enabled "B24TB.TrackerCurrent(6)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 494 8 74 80
+		enabled "B24TB.TrackerParty(6)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 494 8 74 80
+		enabled "B24TB.TrackerOther(6)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 512 10 38 60
+		enabled "B24TB.TrackerPortrait(6) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(6)"
+	}
+	label
+	{
+		area 494 70 74 18
+		enabled "B24TB.TrackerShown(6)"
+		text lua "B24TB.TrackerName(6)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 494 8 18 16
+		enabled "B24TB.TrackerShown(6)"
+		text lua "B24TB.TrackerPlace(6)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 550 8 18 16
+		enabled "B24TB.TrackerShown(6)"
+		text lua "B24TB.TrackerInitiative(6)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 494 26 74 42
+		enabled "B24TB.TrackerOther(6)"
+		text lua "B24TB.TrackerNote(6)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 574 6 78 84
+		enabled "B24TB.TrackerCurrent(7)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 576 8 74 80
+		enabled "B24TB.TrackerParty(7)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 576 8 74 80
+		enabled "B24TB.TrackerOther(7)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 594 10 38 60
+		enabled "B24TB.TrackerPortrait(7) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(7)"
+	}
+	label
+	{
+		area 576 70 74 18
+		enabled "B24TB.TrackerShown(7)"
+		text lua "B24TB.TrackerName(7)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 576 8 18 16
+		enabled "B24TB.TrackerShown(7)"
+		text lua "B24TB.TrackerPlace(7)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 632 8 18 16
+		enabled "B24TB.TrackerShown(7)"
+		text lua "B24TB.TrackerInitiative(7)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 576 26 74 42
+		enabled "B24TB.TrackerOther(7)"
+		text lua "B24TB.TrackerNote(7)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 656 6 78 84
+		enabled "B24TB.TrackerCurrent(8)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 658 8 74 80
+		enabled "B24TB.TrackerParty(8)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 658 8 74 80
+		enabled "B24TB.TrackerOther(8)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 676 10 38 60
+		enabled "B24TB.TrackerPortrait(8) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(8)"
+	}
+	label
+	{
+		area 658 70 74 18
+		enabled "B24TB.TrackerShown(8)"
+		text lua "B24TB.TrackerName(8)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 658 8 18 16
+		enabled "B24TB.TrackerShown(8)"
+		text lua "B24TB.TrackerPlace(8)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 714 8 18 16
+		enabled "B24TB.TrackerShown(8)"
+		text lua "B24TB.TrackerInitiative(8)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 658 26 74 42
+		enabled "B24TB.TrackerOther(8)"
+		text lua "B24TB.TrackerNote(8)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 738 6 78 84
+		enabled "B24TB.TrackerCurrent(9)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 740 8 74 80
+		enabled "B24TB.TrackerParty(9)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 740 8 74 80
+		enabled "B24TB.TrackerOther(9)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 758 10 38 60
+		enabled "B24TB.TrackerPortrait(9) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(9)"
+	}
+	label
+	{
+		area 740 70 74 18
+		enabled "B24TB.TrackerShown(9)"
+		text lua "B24TB.TrackerName(9)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 740 8 18 16
+		enabled "B24TB.TrackerShown(9)"
+		text lua "B24TB.TrackerPlace(9)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 796 8 18 16
+		enabled "B24TB.TrackerShown(9)"
+		text lua "B24TB.TrackerInitiative(9)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 740 26 74 42
+		enabled "B24TB.TrackerOther(9)"
+		text lua "B24TB.TrackerNote(9)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 820 6 78 84
+		enabled "B24TB.TrackerCurrent(10)"
+		fill 200 160 60 255
+	}
+	label
+	{
+		area 822 8 74 80
+		enabled "B24TB.TrackerParty(10)"
+		fill 24 48 24 230
+	}
+	label
+	{
+		area 822 8 74 80
+		enabled "B24TB.TrackerOther(10)"
+		fill 64 18 14 230
+	}
+	label
+	{
+		area 840 10 38 60
+		enabled "B24TB.TrackerPortrait(10) ~= ''"
+		bitmap lua "B24TB.TrackerPortrait(10)"
+	}
+	label
+	{
+		area 822 70 74 18
+		enabled "B24TB.TrackerShown(10)"
+		text lua "B24TB.TrackerName(10)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 822 8 18 16
+		enabled "B24TB.TrackerShown(10)"
+		text lua "B24TB.TrackerPlace(10)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 878 8 18 16
+		enabled "B24TB.TrackerShown(10)"
+		text lua "B24TB.TrackerInitiative(10)"
+		text style "normal"
+		text align center center
+	}
+	label
+	{
+		area 822 26 74 42
+		enabled "B24TB.TrackerOther(10)"
+		text lua "B24TB.TrackerNote(10)"
+		text style "normal"
+		text align center center
+	}
+}

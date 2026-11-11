@@ -1,0 +1,13 @@
+# Companions the Companions test mode checks (tools/ingame-test.ps1 -Mode Companions), per game:
+# their highest-level versions. The harness spawns copies without dialogue and scripts
+# (tools/ingame/companion-copies.pl), so no companion starts talking.
+BGEE: AJANTI4 ALORA6 BAELOT7 BRANWE5 CORAN5 CORWIN7 DORN2 DYNAHE2 EDWIN2 ELDOTH5 FALDOR5 GARRIC2 IMOEN1 JAHEIR2 KAGAIN2 KHALID2 KIVAN4 MINSC2 MONTAR2 NEERA2 QUAYLE4 RASAAD2 SAFANA4 SHARTE4 SKIE6 TIAX4 VICONI4 XAN4 XZAR2 YESLIC5
+BG2EE: AERIE10 ANOMEN10 CERND10 DORN10 EDWIN11 HAER10 OHHEX10 JAHEI14 JAN10 KELDOR10 KORGAN11 MAZZY11 MINSC10 NALIA8 NEERA10 RASAAD10 SAREVOK VALYG11 VICONI11 WILSON13 YOSHI10 TTXAN
+# The Joining test mode: a single class and a multiclass per game join the party and level up.
+JoiningBGEE: KHALID2 JAHEIR2 AJANTI4
+JoiningBG2EE: KORGAN11 NALIA8 WILSON13
+# The TurnPlay mode: companions join the protagonist (single classes are brought to its level).
+TurnPlayBGEE: KHALID2 KIVAN4
+TurnPlayBG2EE: MINSC10
+# The Petrify mode: the companion a basilisk turns to stone.
+PetrifyBGEE: KHALID2

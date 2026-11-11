@@ -1,0 +1,25 @@
+2DA V1.0
+*
+                  CLASS      SUBCLASS          NAME
+STALKER           RANGER     GLOOM_STALKER     Gloom_Stalker
+BEASTMASTER       RANGER     BEAST_MASTER      Beast_Master
+FERALAN           RANGER     HUNTER           Hunter
+ASSASIN           ROGUE      ASSASSIN         Assassin
+SKALD             BARD       VALOR            College_of_Valor
+JESTER            BARD       GLAMOUR          College_of_Glamour
+BLADE             BARD       DANCE            College_of_Dance
+SHAPESHIFTER      DRUID      MOON             Circle_of_the_Moon
+BEAST_FRIEND      DRUID      SEA              Circle_of_the_Sea
+LATHANDER         CLERIC     LIGHT            Light_Domain
+OHTEMPUS          CLERIC     WAR              War_Domain
+CAVALIER          PALADIN    GLORY            Oath_of_Glory
+UNDEAD_HUNTER     PALADIN    DEVOTION         Oath_of_Devotion
+INQUISITOR        PALADIN    VENGEANCE        Oath_of_Vengeance
+BLACKGUARD        PALADIN    VENGEANCE        Oath_of_Vengeance
+ABJURER           WIZARD     ABJURER          Abjurer
+DIVINER           WIZARD     DIVINER          Diviner
+ILLUSIONIST       WIZARD     ILLUSIONIST      Illusionist
+INVOKER           WIZARD     EVOKER           Evoker
+DRAGON_DISCIPLE   SORCERER   DRACONIC         Draconic_Sorcery
+DARK_MOON         MONK       SHADOW           Warrior_of_Shadow
+SUN_SOUL          MONK       ELEMENTS         Warrior_of_the_Elements

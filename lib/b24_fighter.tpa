@@ -1,0 +1,476 @@
+// Fighter component: the 2024 Fighter and the Champion (see lua/B24FIGHT.lua), and the level-up
+// choices shared by the class components (lua/B24LEVEL.lua).
+
+COPY ~bg2024/lua/M_B24FI.lua~    ~override~
+     ~bg2024/lua/B24LEVEL.lua~   ~override~
+     ~bg2024/lua/B24LEVEL.menu~  ~override~
+     ~bg2024/lua/B24FIGHT.lua~   ~override~
+// BG2:EE has no BG1 character creation window: the popup takes the window of BG2's own level-up
+// choice (high-level abilities, GUIHSBS), its parts moved onto that window's panels: the name on
+// top, the kind of choice in the header box above the list.
+ACTION_IF NOT FILE_EXISTS_IN_GAME ~guicgwde.mos~ AND FILE_EXISTS_IN_GAME ~guihsbs.mos~ BEGIN
+  COPY_EXISTING ~B24LEVEL.menu~ ~override~
+    REPLACE_TEXTUALLY EXACT_MATCH ~mosaic GUICGWDE~ ~mosaic GUIHSBS~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 60 37 744 44
+		text lua "B24LV_Title()"~ ~area 74 10 716 52
+		text lua "B24LV_Name()"
+		text style "title"
+	}
+	label
+	{
+		area 36 114 448 52
+		text lua "B24LV_Choice()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 0 0 340 44~ ~area 0 0 404 44~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 52 0 288 44~ ~area 52 0 352 44~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 22 100 340 490~ ~area 58 194 404 404~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 100 456 490~ ~area 522 118 302 494~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 196 653 230 40~ ~area 210 652 238 44~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 438 653 230 40~ ~area 452 652 238 44~
+    BUT_ONLY
+END
+LAF b24_menu_for_game STR_VAR file = ~B24LEVEL.menu~ END
+
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@140) description = RESOLVE_STR_REF (@141) opcode = 402
+  STR_VAR resref = ~B24SWIND~ icon = ~SPPR315C~ effect_res = ~B24SWIND~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@142) description = RESOLVE_STR_REF (@143) opcode = 402
+  STR_VAR resref = ~B24ASURG~ icon = ~SPWI613C~ effect_res = ~B24ASURG~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@144) description = RESOLVE_STR_REF (@145) opcode = 402
+  STR_VAR resref = ~B24TMAST~ icon = ~ENCHAXEC~ effect_res = ~B24TMAST~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@146) description = RESOLVE_STR_REF (@147) opcode = 402
+  STR_VAR resref = ~B24ASI~ icon = ~SPWI408B~ effect_res = ~B24ASI~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@148) description = RESOLVE_STR_REF (@149) opcode = 402
+  STR_VAR resref = ~B24FSTY~ icon = ~SPDWD02C~ effect_res = ~B24FSTY~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@150) description = RESOLVE_STR_REF (@151) opcode = 402
+  STR_VAR resref = ~B24WMAS~ icon = ~ENCHSSWC~ effect_res = ~B24WMAS~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@152) description = RESOLVE_STR_REF (@153) opcode = 402
+  STR_VAR resref = ~B24SUBC~ icon = ~SPWI515C~ effect_res = ~B24SUBC~ END
+
+// Barbarian and Rogue (lua/B24BARB.lua, lua/B24ROGUE.lua).
+COPY ~bg2024/lua/B24BARB.lua~    ~override~
+     ~bg2024/lua/B24ROGUE.lua~   ~override~
+
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@154) description = RESOLVE_STR_REF (@155) opcode = 402
+  STR_VAR resref = ~B24RAGE~ icon = ~SPCL152B~ effect_res = ~B24RAGE~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@156) description = RESOLVE_STR_REF (@157) opcode = 402
+  STR_VAR resref = ~B24RECKL~ icon = ~SPIN117C~ effect_res = ~B24RECKL~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@158) description = RESOLVE_STR_REF (@159) opcode = 402
+  STR_VAR resref = ~B24INTIM~ icon = ~SPPR416C~ effect_res = ~B24INTIM~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@160) description = RESOLVE_STR_REF (@161) opcode = 402
+  STR_VAR resref = ~B24CUNNG~ icon = ~SPPR403C~ effect_res = ~B24CUNNG~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@162) description = RESOLVE_STR_REF (@163) opcode = 402
+  STR_VAR resref = ~B24STAIM~ icon = ~SPWI424C~ effect_res = ~B24STAIM~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@164) description = RESOLVE_STR_REF (@165) opcode = 402
+  STR_VAR resref = ~B24EXPRT~ icon = ~SPWI110C~ effect_res = ~B24EXPRT~ END
+
+// The Barbarian kit's 2e abilities make way for the 2024 Barbarian features.
+COPY_EXISTING ~clabfi05.2da~ ~override~
+  REPLACE_TEXTUALLY ~\(AP\|GA\)_[A-Z0-9_#]+~ ~****~
+  BUT_ONLY
+
+// Sneak Attack replaces BG's backstab multiplier.
+COPY_EXISTING ~backstab.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  FOR (c = 1; c < b24_cols; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = b24_cols value = 1 END
+  END
+  BUT_ONLY
+
+// Monk, Paladin and Ranger (lua/B24MONK.lua, lua/B24PALA.lua, lua/B24RANGR.lua).
+COPY ~bg2024/lua/B24MONK.lua~    ~override~
+     ~bg2024/lua/B24PALA.lua~    ~override~
+     ~bg2024/lua/B24RANGR.lua~   ~override~
+
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@166) description = RESOLVE_STR_REF (@167) opcode = 402
+  STR_VAR resref = ~B24FLURY~ icon = ~SPCL238C~ effect_res = ~B24FLURY~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@168) description = RESOLVE_STR_REF (@169) opcode = 402
+  STR_VAR resref = ~B24PDEF~ icon = ~SPCL522C~ effect_res = ~B24PDEF~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@170) description = RESOLVE_STR_REF (@171) opcode = 402
+  STR_VAR resref = ~B24STEPW~ icon = ~SPWI921C~ effect_res = ~B24STEPW~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@172) description = RESOLVE_STR_REF (@173) opcode = 402
+  STR_VAR resref = ~B24STUN~ icon = ~SPCL811C~ effect_res = ~B24STUN~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@174) description = RESOLVE_STR_REF (@175) opcode = 402
+  STR_VAR resref = ~B24UMETA~ icon = ~SPPR711C~ effect_res = ~B24UMETA~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@176) description = RESOLVE_STR_REF (@177) opcode = 402
+  STR_VAR resref = ~B24WHOLE~ icon = ~SPPR502C~ effect_res = ~B24WHOLE~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@178) description = RESOLVE_STR_REF (@179) opcode = 402
+  STR_VAR resref = ~B24SUPDF~ icon = ~SPWI408C~ effect_res = ~B24SUPDF~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@180) description = RESOLVE_STR_REF (@181) opcode = 402 touch = 1
+  STR_VAR resref = ~B24QPALM~ icon = ~SPCL820C~ effect_res = ~B24QPALM~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@182) description = RESOLVE_STR_REF (@183) opcode = 402 touch = 1
+  STR_VAR resref = ~B24LOH~ icon = ~SPCL815B~ effect_res = ~B24LOH~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@184) description = RESOLVE_STR_REF (@185) opcode = 402
+  STR_VAR resref = ~B24SMITE~ icon = ~SPPR313C~ effect_res = ~B24SMITE~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@186) description = RESOLVE_STR_REF (@187) opcode = 402
+  STR_VAR resref = ~B24SACWP~ icon = ~SPPR206C~ effect_res = ~B24SACWP~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@188) description = RESOLVE_STR_REF (@189) opcode = 402
+  STR_VAR resref = ~B24ABJUR~ icon = ~SPPR515C~ effect_res = ~B24ABJUR~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@190) description = RESOLVE_STR_REF (@191) opcode = 402
+  STR_VAR resref = ~B24NIMBS~ icon = ~SPCL237B~ effect_res = ~B24NIMBS~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@192) description = RESOLVE_STR_REF (@193) opcode = 402 touch = 1 range = 300
+  STR_VAR resref = ~B24HMARK~ icon = ~SPPR415C~ effect_res = ~B24HMARK~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@194) description = RESOLVE_STR_REF (@195) opcode = 402
+  STR_VAR resref = ~B24TIRLS~ icon = ~SPPR201C~ effect_res = ~B24TIRLS~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@196) description = RESOLVE_STR_REF (@197) opcode = 402
+  STR_VAR resref = ~B24NVEIL~ icon = ~SPWI307C~ effect_res = ~B24NVEIL~ END
+
+// The 2e class abilities of monks, paladins and rangers make way for the 2024 features.
+ACTION_FOR_EACH b24_clab IN ~clabmo01~ ~clabpa01~ ~clabrn01~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_clab%.2da~ BEGIN
+    COPY_EXISTING ~%b24_clab%.2da~ ~override~
+      REPLACE_TEXTUALLY ~\(AP\|GA\)_[A-Z0-9_#]+~ ~****~
+      BUT_ONLY
+  END
+END
+
+// Monk fists follow the Martial Arts die: d6, d8 at 5, d10 at 11, d12 at 17; magical from level 6
+// (Empowered Strikes). BG's fists are the template.
+ACTION_IF FILE_EXISTS_IN_GAME ~mfist1.itm~ BEGIN
+  ACTION_FOR_EACH b24_fist IN ~B24MF6:6:0~ ~B24MF8N:8:0~ ~B24MF8:8:1~ ~B24MF10:10:1~ ~B24MF12:12:1~ BEGIN
+    OUTER_PATCH_SAVE b24_res ~%b24_fist%~ BEGIN REPLACE_TEXTUALLY ~:.*~ ~~ END
+    OUTER_PATCH_SAVE b24_die ~%b24_fist%~ BEGIN REPLACE_TEXTUALLY ~^[A-Z0-9]+:\([0-9]+\):.*~ ~\1~ END
+    OUTER_PATCH_SAVE b24_magic ~%b24_fist%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+    COPY_EXISTING ~mfist1.itm~ ~override/%b24_res%.itm~
+      WRITE_LONG 0x60 b24_magic
+      READ_LONG  0x64 b24_hdr
+      READ_SHORT 0x68 b24_hdr_n
+      FOR (h = 0; h < b24_hdr_n; ++h) BEGIN
+        WRITE_SHORT (b24_hdr + h * 0x38 + 0x14) 0
+        WRITE_BYTE  (b24_hdr + h * 0x38 + 0x16) b24_die
+        WRITE_BYTE  (b24_hdr + h * 0x38 + 0x18) 1
+        WRITE_SHORT (b24_hdr + h * 0x38 + 0x1a) 0
+      END
+  END
+  COPY_EXISTING ~monkfist.2da~ ~override~
+    // The default entry (levels beyond the rows) is the d12 fist too.
+    REPLACE_TEXTUALLY ~^MFIST[0-9]+~ ~B24MF12~
+    COUNT_2DA_ROWS 2 b24_rows
+    FOR (r = 0; r < b24_rows; ++r) BEGIN
+      READ_2DA_ENTRY r 0 2 b24_level
+      PATCH_IF (IS_AN_INT b24_level) BEGIN
+        TEXT_SPRINT b24_res ~B24MF12~
+        PATCH_IF (b24_level <= 16) BEGIN TEXT_SPRINT b24_res ~B24MF10~ END
+        PATCH_IF (b24_level <= 10) BEGIN TEXT_SPRINT b24_res ~B24MF8~ END
+        PATCH_IF (b24_level <= 5) BEGIN TEXT_SPRINT b24_res ~B24MF8N~ END
+        PATCH_IF (b24_level <= 4) BEGIN TEXT_SPRINT b24_res ~B24MF6~ END
+        SET_2DA_ENTRY r 1 2 ~%b24_res%~
+      END
+    END
+    BUT_ONLY
+END
+
+// Bard, Cleric, Druid, Sorcerer and Wizard (lua/B24BARD.lua ... lua/B24WIZ.lua).
+COPY ~bg2024/lua/B24BARD.lua~    ~override~
+     ~bg2024/lua/B24CLER.lua~    ~override~
+     ~bg2024/lua/B24DRUID.lua~   ~override~
+     ~bg2024/lua/B24SORC.lua~    ~override~
+     ~bg2024/lua/B24WIZ.lua~     ~override~
+     ~bg2024/lua/B24GFEAT.lua~   ~override~
+
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@400) description = RESOLVE_STR_REF (@401) opcode = 402 touch = 1 range = 60
+  STR_VAR resref = ~B24BINSP~ icon = ~SPENBARB~ effect_res = ~B24BINSP~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@402) description = RESOLVE_STR_REF (@403) opcode = 402 touch = 1 range = 60
+  STR_VAR resref = ~B24DSPRK~ icon = ~SPPR612C~ effect_res = ~B24DSPRK~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@404) description = RESOLVE_STR_REF (@405) opcode = 402
+  STR_VAR resref = ~B24TURNU~ icon = ~SPWI324C~ effect_res = ~B24TURNU~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@406) description = RESOLVE_STR_REF (@407) opcode = 402
+  STR_VAR resref = ~B24PRSLF~ icon = ~SPPR607C~ effect_res = ~B24PRSLF~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@408) description = RESOLVE_STR_REF (@409) opcode = 402 touch = 1 range = 60
+  STR_VAR resref = ~B24LAID~ icon = ~SPPR704C~ effect_res = ~B24LAID~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@410) description = RESOLVE_STR_REF (@411) opcode = 402
+  STR_VAR resref = ~B24INSOR~ icon = ~SPWI222C~ effect_res = ~B24INSOR~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@412) description = RESOLVE_STR_REF (@413) opcode = 402
+  STR_VAR resref = ~B24OPTN~ icon = ~SPWI419C~ effect_res = ~B24OPTN~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@414) description = RESOLVE_STR_REF (@415) opcode = 402
+  STR_VAR resref = ~B24CANTP~ icon = ~SPWI112B~ effect_res = ~B24CANTP~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@416) description = RESOLVE_STR_REF (@417) opcode = 402
+  STR_VAR resref = ~B24SPBK~ icon = ~SPWI110B~ effect_res = ~B24SPBK~ END
+
+// Subclasses beyond the SRD (lua/B24X*.lua; shared helpers in lua/B24XCOM.lua).
+COPY ~bg2024/lua/B24XCOM.lua~    ~override~
+     ~bg2024/lua/B24NPC.lua~     ~override~
+     ~bg2024/lua/B24XFIG.lua~    ~override~
+     ~bg2024/lua/B24XBAR.lua~    ~override~
+     ~bg2024/lua/B24XBRD.lua~    ~override~
+     ~bg2024/lua/B24XCLR.lua~    ~override~
+     ~bg2024/lua/B24XDRU.lua~    ~override~
+     ~bg2024/lua/B24XMNK.lua~    ~override~
+     ~bg2024/lua/B24XPAL.lua~    ~override~
+     ~bg2024/lua/B24XRNG.lua~    ~override~
+     ~bg2024/lua/B24XROG.lua~    ~override~
+     ~bg2024/lua/B24XSOR.lua~    ~override~
+     ~bg2024/lua/B24XWIZ.lua~    ~override~
+
+// The Eldritch Knight and Arcane Trickster pick their spells from the catalog's wizard list.
+COPY ~bg2024/tables/b24spell.2da~ ~override~
+
+INCLUDE ~bg2024/lib/b24_subclass_innates.tpa~
+
+// Travel Along the Tree (World Tree 14): BG's Dimension Door as an innate, 60 feet, granted once
+// per round while raging (B24XBAR.lua); its op402 notes the use.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi402.spl~ BEGIN
+  COPY_EXISTING ~spwi402.spl~ ~override/b24wttrv.spl~
+    SAY 0x08 @776
+    SAY 0x50 @777
+    WRITE_SHORT 0x1c 4
+    WRITE_LONG  0x34 1
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x02) 4
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 60
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x10) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x12) 0
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 1 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24WTTRV~ END
+    BUT_ONLY
+END
+
+// Epic Boon innates (B24GFEAT.lua): Recovery Dice, Spell Recall, Merge with Shadows, and
+// Dimensional Travel (BG's Dimension Door, 30 feet).
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@778) description = RESOLVE_STR_REF (@779) opcode = 402
+  STR_VAR resref = ~B24BRCVR~ icon = ~SPPR103C~ effect_res = ~B24BRCVR~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@780) description = RESOLVE_STR_REF (@781) opcode = 402
+  STR_VAR resref = ~B24BSPRC~ icon = ~SPWI105C~ effect_res = ~B24BSPRC~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@782) description = RESOLVE_STR_REF (@783) opcode = 402
+  STR_VAR resref = ~B24BNIGH~ icon = ~SPWI206C~ effect_res = ~B24BNIGH~ END
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi402.spl~ BEGIN
+  COPY_EXISTING ~spwi402.spl~ ~override/b24bdimt.spl~
+    SAY 0x08 @784
+    SAY 0x50 @785
+    WRITE_SHORT 0x1c 4
+    WRITE_LONG  0x34 1
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x02) 4
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 30
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x10) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x12) 0
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 1 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24BDIMT~ END
+    BUT_ONLY
+END
+
+// Soulknife: the psychic blade (a dagger made of thought: 1d6, finesse, magical, weightless).
+COPY_EXISTING ~dagg01.itm~ ~override/b24psbld.itm~
+  SAY 0x08 @900
+  SAY 0x0c @900
+  SAY 0x50 @901
+  SAY 0x54 @901
+  READ_LONG 0x18 b24_flags
+  WRITE_LONG 0x18 (b24_flags BOR 0x40)  // magical
+  WRITE_LONG 0x34 0                     // price
+  WRITE_LONG 0x4c 0                     // weight
+  WRITE_LONG 0x60 1                     // counts as a +1 weapon (hits creatures immune to normal weapons)
+  READ_LONG  0x64 b24_hdr
+  READ_SHORT 0x68 b24_hdr_n
+  FOR (h = 0; h < b24_hdr_n; ++h) BEGIN
+    WRITE_BYTE (b24_hdr + h * 0x38 + 0x16) 6
+    WRITE_BYTE (b24_hdr + h * 0x38 + 0x18) 1
+    WRITE_SHORT (b24_hdr + h * 0x38 + 0x1a) 0
+  END
+
+// Beast Master: the primal companion, a wolf per level band (2024 beast of the land: hit points
+// 5 + 5 x level, AC 13 + Wisdom, attack bonus = Proficiency Bonus + Wisdom, damage +2 + Wisdom;
+// Wisdom is taken as +3). band:hit points:THAC0:attacks
+// Exceptional Training (Beast Master 7): the companion's attacks count as magical, a +1 copy of
+// the wolf's bite (P1-4) for the bands from 7 on.
+ACTION_IF FILE_EXISTS_IN_GAME ~p1-4.itm~ BEGIN
+  COPY_EXISTING ~p1-4.itm~ ~override/b24bite1.itm~
+    WRITE_LONG 0x18 (THIS BOR BIT6)   // magical
+    WRITE_LONG 0x60 1                 // enchantment +1
+END
+ACTION_FOR_EACH b24_band IN ~03:20:15:1~ ~05:30:14:1~ ~07:40:14:1~ ~09:50:13:1~ ~11:60:13:2~ ~13:70:12:2~
+                            ~15:80:12:2~ ~17:90:11:2~ ~19:100:11:2~ BEGIN
+  OUTER_PATCH_SAVE b24_lvl ~%b24_band%~ BEGIN REPLACE_TEXTUALLY ~:.*~ ~~ END
+  OUTER_PATCH_SAVE b24_hp ~%b24_band%~ BEGIN REPLACE_TEXTUALLY ~^[0-9]+:\([0-9]+\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_thac0 ~%b24_band%~ BEGIN REPLACE_TEXTUALLY ~^[0-9]+:[0-9]+:\([0-9]+\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_apr ~%b24_band%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+  COPY_EXISTING ~wolfsu.cre~ ~override/b24bst%b24_lvl%.cre~
+    SAY 0x08 @902
+    SAY 0x0c @902
+    WRITE_LONG  0x14 0                  // no experience for killing it
+    WRITE_SHORT 0x24 b24_hp
+    WRITE_SHORT 0x26 b24_hp
+    WRITE_SHORT 0x46 4                  // AC 16 in 2024 terms
+    WRITE_SHORT 0x48 4
+    WRITE_BYTE  0x52 b24_thac0
+    WRITE_BYTE  0x53 b24_apr
+    WRITE_BYTE  0x234 b24_lvl
+    LPF ADD_CRE_EFFECT INT_VAR opcode = 73 target = 1 parameter1 = 5 timing = 9 END
+    PATCH_IF (b24_lvl >= 7) AND FILE_EXISTS_IN_GAME ~b24bite1.itm~ BEGIN
+      REPLACE_CRE_ITEM ~b24bite1~ #0 #0 #0 ~none~ ~WEAPON1~ EQUIP
+    END
+END
+
+
+// The base druid's 2e passives (poison immunity at 15, elemental resistances at 18, 21 and 24)
+// are not 2024 Druid features, and BG's shapeshifting (wolf, black and brown bear from level 7)
+// makes way for the 2024 Wild Shape below. B24DRUID.lua takes them from existing druids.
+ACTION_IF FILE_EXISTS_IN_GAME ~clabdr01.2da~ BEGIN
+  COPY_EXISTING_REGEXP GLOB ~^clabdr0[0-9]\.2da$~ ~override~
+    REPLACE_TEXTUALLY CASE_INSENSITIVE ~AP_SPCL92[4-7]~ ~****~
+    REPLACE_TEXTUALLY CASE_INSENSITIVE ~GA_SPCL61[1-3]~ ~****~
+    BUT_ONLY
+END
+
+// 2024 Wild Shape (B24DRUID.lua): every row of B24WSHAP.2DA is a beast form. Its innate (B24WF...,
+// from tools/subclass_innates.txt) calls the Lua function of the same name, which gives the druid
+// the form's claws (B24WI..., an op111 weapon) for the form's duration. The claws hold the look
+// (op135 appearance of B24WC..., a copy of the wolf with the form's animation), the attacks per
+// round and resistances; the Lua side sets the beast's scores, AC and attack bonus. The Wild Shape
+// innate (B24WSHAP) opens the list of the forms up to the druid's tier (op214 over B24WSL1-4.2DA).
+COPY ~bg2024/tables/b24wshap.2da~ ~override/b24wshap.2da~
+COPY_EXISTING ~b24wshap.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_ws 18          // the form rows (the column header has 17 entries)
+BUT_ONLY
+OUTER_FOR (b24_t = 1; b24_t <= 4; ++b24_t) BEGIN
+  OUTER_TEXT_SPRINT b24_ws_list ~2DA V1.0%LNL%*%LNL%           ResRef     Type%LNL%~
+  OUTER_FOR (r = 0; r < b24_ws; ++r) BEGIN
+    OUTER_SPRINT b24_ws_key $b24_ws(~%r%~ ~0~)
+    OUTER_SPRINT b24_ws_res $b24_ws(~%r%~ ~1~)
+    OUTER_SET b24_ws_tier = $b24_ws(~%r%~ ~2~)
+    ACTION_IF b24_ws_tier <= b24_t BEGIN
+      OUTER_TEXT_SPRINT b24_ws_list ~%b24_ws_list%%b24_ws_key%  %b24_ws_res%  3%LNL%~
+    END
+  END
+  COPY_EXISTING ~b24wshap.2da~ ~override/b24wsl%b24_t%.2da~
+    DELETE_BYTES 0 BUFFER_LENGTH
+    INSERT_BYTES 0 (STRING_LENGTH ~%b24_ws_list%~)
+    WRITE_ASCIIE 0 ~%b24_ws_list%~
+END
+OUTER_FOR (r = 0; r < b24_ws; ++r) BEGIN
+  OUTER_SPRINT b24_ws_res $b24_ws(~%r%~ ~1~)
+  OUTER_PATCH_SAVE b24_ws_id ~%b24_ws_res%~ BEGIN DELETE_BYTES 0 5 END // B24WFWOL -> WOL
+  OUTER_SET b24_ws_anim = $b24_ws(~%r%~ ~3~)
+  OUTER_SET b24_ws_str = $b24_ws(~%r%~ ~6~)
+  OUTER_SPRINT b24_ws_dice $b24_ws(~%r%~ ~10~)
+  OUTER_SET b24_ws_bonus = $b24_ws(~%r%~ ~11~)
+  OUTER_SET b24_ws_type = $b24_ws(~%r%~ ~12~)
+  OUTER_SET b24_ws_apr = $b24_ws(~%r%~ ~13~)
+  OUTER_SPRINT b24_ws_resist $b24_ws(~%r%~ ~17~)
+  OUTER_PATCH_SAVE b24_ws_count ~%b24_ws_dice%~ BEGIN REPLACE_TEXTUALLY ~d.*~ ~~ END
+  OUTER_PATCH_SAVE b24_ws_size ~%b24_ws_dice%~ BEGIN REPLACE_TEXTUALLY ~.*d~ ~~ END
+  // The engine adds the Strength modifier (STRMOD.2DA) to the damage; the claws hold the rest.
+  OUTER_SET b24_ws_strmod = (b24_ws_str - 10) / 2   // every form has Strength 10 or more
+  COPY_EXISTING ~wolfsu.cre~ ~override/b24wc%b24_ws_id%.cre~
+    WRITE_LONG 0x28 b24_ws_anim
+  COPY_EXISTING ~p1-4.itm~ ~override/b24wi%b24_ws_id%.itm~
+    SAY 0x08 @992
+    SAY 0x0c @992
+    WRITE_LONG 0x60 0                     // no enchantment: beast attacks aren't magical
+    READ_LONG  0x64 b24_hdr
+    WRITE_SHORT (b24_hdr + 0x16) b24_ws_size
+    WRITE_SHORT (b24_hdr + 0x18) b24_ws_count
+    WRITE_SHORT (b24_hdr + 0x1a) (b24_ws_bonus - b24_ws_strmod)
+    WRITE_SHORT (b24_hdr + 0x1c) b24_ws_type
+    LPF ADD_ITEM_EQEFFECT INT_VAR opcode = 135 target = 1 timing = 2 parameter2 = 1 STR_VAR resource = EVAL ~b24wc%b24_ws_id%~ END
+    LPF ADD_ITEM_EQEFFECT INT_VAR opcode = 1 target = 1 timing = 2 parameter1 = b24_ws_apr parameter2 = 1 END
+    PATCH_IF (~%b24_ws_resist%~ STRING_EQUAL_CASE ~COLD~) BEGIN
+      LPF ADD_ITEM_EQEFFECT INT_VAR opcode = 28 target = 1 timing = 2 parameter1 = 50 END
+    END
+END
+
+// BG kits (B24KITS.2DA): their 2e kit abilities make way for the 2024 class and subclass features.
+// Entries a kit shares with its base class table (Set Traps, Shapeshift, ...) stay. What is removed
+// is listed in B24KITAB.2DA, so the runtime can take it from existing characters and companions
+// (B24LEVEL.lua); kits with a PHB 2024 counterpart are that subclass.
+COPY ~bg2024/tables/b24kits.2da~ ~override~
+
+ACTION_DEFINE_ASSOCIATIVE_ARRAY b24_base_clab BEGIN
+  2 => CLABFI01  3 => CLABPR01  4 => CLABTH01  5 => CLABBA01  6 => CLABPA01  11 => CLABDR01
+  12 => CLABRN01  20 => CLABMO01  21 => CLABSH01
+END
+
+// Abilities of the base class tables.
+ACTION_PHP_EACH b24_base_clab AS b24_class => b24_table BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_table%.2da~ BEGIN
+    COPY_EXISTING ~%b24_table%.2da~ ~override~
+      REPLACE_EVALUATE CASE_INSENSITIVE ~\(AP\|GA\)_\([A-Z0-9_#]+\)~ BEGIN
+        TEXT_SPRINT b24_res ~%MATCH2%~
+        TO_UPPER b24_res
+        SET $b24_base_has(~%b24_table%~ ~%b24_res%~) = 1
+      END ~%MATCH0%~
+      BUT_ONLY
+  END
+END
+
+COPY_EXISTING ~b24kits.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_kitmap 4
+  FOR (r = 0; r < b24_kitmap; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24_kitmap r 0 b24_kit
+    READ_2DA_ENTRY_FORMER b24_kitmap r 3 b24_kitsub
+    TO_UPPER b24_kit
+    INNER_PATCH_SAVE b24_kitsub ~%b24_kitsub%~ BEGIN REPLACE_TEXTUALLY ~_~ ~ ~ END
+    TEXT_SPRINT $b24_kit_subclass(~%b24_kit%~) ~%b24_kitsub%~
+  END
+  BUT_ONLY
+
+OUTER_TEXT_SPRINT b24_kitab ~2DA V1.0%LNL%*%LNL%       KIT                RES%LNL%~
+OUTER_SET b24_kitab_n = 0
+COPY_EXISTING ~kitlist.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_kits 10
+  FOR (r = 0; r < b24_kits; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24_kits r 1 b24_kit
+    READ_2DA_ENTRY_FORMER b24_kits r 4 b24_help
+    READ_2DA_ENTRY_FORMER b24_kits r 5 b24_abil
+    READ_2DA_ENTRY_FORMER b24_kits r 8 b24_class
+    TO_UPPER b24_kit
+    TO_UPPER b24_abil
+    // Wilson's bear kit belongs to a creature, not a character kit.
+    PATCH_IF (IS_AN_INT b24_class) AND NOT (~%b24_abil%~ STRING_EQUAL ~*~) AND NOT (~%b24_kit%~ STRING_EQUAL ~BARBARIAN~)
+      AND NOT (~%b24_kit%~ STRING_EQUAL ~GRIZZLY_BEAR~) BEGIN
+      TEXT_SPRINT $b24_kit_table(~%b24_kit%~) ~%b24_abil%~
+      SET $b24_kit_class(~%b24_kit%~) = b24_class
+      // The kit description gets a note on what the kit is now.
+      PATCH_IF (IS_AN_INT b24_help) AND (b24_help > 0) BEGIN
+        GET_STRREF b24_help b24_text
+        PATCH_IF VARIABLE_IS_SET $b24_kit_subclass(~%b24_kit%~) BEGIN
+          TEXT_SPRINT b24_sub $b24_kit_subclass(~%b24_kit%~)
+          SPRINT b24_note @910
+        END ELSE BEGIN
+          SPRINT b24_note @911
+        END
+        PATCH_IF (INDEX (~BG 2024:~ ~%b24_text%~) < 0) BEGIN
+          SET b24_new = RESOLVE_STR_REF (~%b24_text%%LNL%%LNL%%b24_note%~)
+          SET_2DA_ENTRY_LATER b24_kitset r 4 b24_new
+        END
+      END
+    END
+  END
+  SET_2DA_ENTRIES_NOW b24_kitset 10
+  BUT_ONLY
+
+ACTION_PHP_EACH b24_kit_table AS b24_kit => b24_abil BEGIN
+  OUTER_SET b24_class = $b24_kit_class(~%b24_kit%~)
+  OUTER_TEXT_SPRINT b24_base ~~
+  ACTION_IF VARIABLE_IS_SET $b24_base_clab(~%b24_class%~) BEGIN
+    OUTER_TEXT_SPRINT b24_base $b24_base_clab(~%b24_class%~)
+  END
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_abil%.2da~ AND NOT (~%b24_abil%~ STRING_EQUAL_CASE ~%b24_base%~) BEGIN
+    COPY_EXISTING ~%b24_abil%.2da~ ~override~
+      REPLACE_EVALUATE CASE_INSENSITIVE ~\(AP\|GA\)_\([A-Z0-9_#]+\)~ BEGIN
+        TEXT_SPRINT b24_res ~%MATCH2%~
+        TO_UPPER b24_res
+        PATCH_IF VARIABLE_IS_SET $b24_base_has(~%b24_base%~ ~%b24_res%~) BEGIN
+          TEXT_SPRINT b24_keep ~%MATCH0%~
+        END ELSE BEGIN
+          TEXT_SPRINT b24_keep ~****~
+          PATCH_IF NOT VARIABLE_IS_SET $b24_kitab_seen(~%b24_kit%~ ~%b24_res%~) BEGIN
+            SET $b24_kitab_seen(~%b24_kit%~ ~%b24_res%~) = 1
+            SET b24_kitab_n += 1
+            TEXT_SPRINT b24_kitab ~%b24_kitab%%b24_kitab_n%      %b24_kit%      %b24_res%%LNL%~
+          END
+        END
+      END ~%b24_keep%~
+      BUT_ONLY
+  END
+END
+
+COPY_EXISTING ~b24kits.2da~ ~override/b24kitab.2da~
+  DELETE_BYTES 0 BUFFER_LENGTH
+  INSERT_BYTES 0 (STRING_LENGTH ~%b24_kitab%~)
+  WRITE_ASCIIE 0 ~%b24_kitab%~
+
+// The mod's own icons for the spells and innates made above.
+LAF b24_install_icons END

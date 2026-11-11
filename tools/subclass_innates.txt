@@ -1,0 +1,116 @@
+# Innate abilities of the subclasses beyond the SRD (lua/B24X*.lua) and of Font of Magic.
+# tools/gen_innates.pl turns this list into lib/b24_subclass_innates.tpa and the strings @2000 on in
+# tra/english/setup.tra. Columns: resref | icon | range (0 = self, n = a creature within n ft,
+# 1 = touch) | name | description
+B24PICK|SPWI420C|0|Choose: Class Feature Option|Opens the choice of a class feature you have earned but not chosen yet (maneuvers, spells known).
+B24MTRIP|SPWI101C|0|Trip Attack|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or falls prone.
+B24MPUSH|SPWI212B|0|Pushing Attack|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or is pushed 15 feet away.
+B24MMENA|SPWI204B|0|Menacing Attack|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Wisdom save or is frightened until the end of your next round.
+B24MDISA|SPWI207C|0|Disarming Attack|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or fumbles its weapon (its attacks have disadvantage until the end of the next round).
+B24MDIST|SPWI105C|0|Distracting Strike|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the next attack against the target by someone else this round has advantage.
+B24MGOAD|SPWI123B|0|Goading Attack|Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Wisdom save or has disadvantage on attacks against anyone but you until the end of your next round.
+B24MFEIN|SPWI120C|0|Feinting Attack|Battle Master maneuver (one Superiority Die): your next attack this round has advantage, and a hit deals the die as extra damage.
+B24MPREC|SPCL121B|0|Precision Attack|Battle Master maneuver (one Superiority Die): roll the die and add it to your attack rolls for the rest of this round.
+B24MLUNG|SPPR507C|0|Lunging Attack|Battle Master maneuver (one Superiority Die): you move faster this round, and your next hit deals the die as extra damage.
+B24MSWEE|SPCL900B|0|Sweeping Attack|Battle Master maneuver (one Superiority Die): when your next melee attack this round hits, another enemy next to the target takes the die as damage.
+B24MPARR|SPWI114C|0|Parry|Battle Master maneuver (one Superiority Die): the next melee hit against you this round deals the die plus your Strength or Dexterity modifier less damage.
+B24MRALY|SPPR108C|30|Rally|Battle Master maneuver (one Superiority Die): an ally or you gains temporary hit points equal to the die plus your Charisma modifier.
+B24MEVAS|SPWI201B|0|Evasive Footwork|Battle Master maneuver (one Superiority Die): add the die to your Armor Class for the rest of this round.
+B24MCOMM|SPPR412C|60|Commander's Strike|Battle Master maneuver (one Superiority Die): an ally makes one extra attack this round, and its next hit deals the die as extra damage.
+B24PSTRK|SPWI705C|0|Psionic Strike|Psi Warrior (one Psionic Energy Die): your next weapon hit this round deals the die plus your Intelligence modifier in force damage.
+B24PGMND|SPPR350C|0|Guarded Mind|Psi Warrior (one Psionic Energy Die): you shake off fear.
+B24PBULW|SPWI602C|0|Bulwark of Force|Psi Warrior: you and up to your Intelligence modifier allies within 30 feet gain +2 Armor Class for a minute. Once per long rest; later uses cost a Psionic Energy Die.
+B24WTBRN|SPWI215C|30|Branches of the Tree|Path of the World Tree, while raging, once per round: a creature within 30 feet makes a Strength save or is pulled next to you by the branches of the World Tree and can't move for a round.
+B24ZWARG|SPPR409C|0|Warrior of the Gods|Path of the Zealot: spend one of your d12s and regain that many hit points. The dice return on a long rest.
+B24ZPRES|OHTYR1C|0|Zealous Presence|Path of the Zealot: you and your allies within 60 feet have advantage on attacks and saves for a round. Once per long rest.
+B24GBEGU|SPWI104B|60|Beguiling Magic|College of Glamour: a creature within 60 feet makes a Wisdom save against your spell save DC or is frightened for a minute. Once per long rest; later uses spend Bardic Inspiration.
+B24GMANT|SPPR201B|0|Mantle of Inspiration|College of Glamour (one Bardic Inspiration): up to your Charisma modifier allies within 60 feet gain twice a roll of your Bardic Inspiration die as temporary hit points.
+B24GMAJE|SPWI407B|0|Mantle of Majesty|College of Glamour: for a minute you can command a creature each round (the Command innate). Once per long rest.
+B24GCMND|SPPR102B|60|Command|Mantle of Majesty, once per round: a creature makes a Wisdom save against your spell save DC or falls prone for a round.
+B24GUNBR|SPPR613C|0|Unbreakable Majesty|College of Glamour: for a minute attacks against you have disadvantage. Once per short rest.
+B24LRADI|SPPR707C|0|Radiance of the Dawn|Light Domain (Channel Divinity): enemies within 30 feet make a Constitution save or take 2d10 + your Cleric level radiant damage, half on a success.
+B24LWARD|SPPR105B|30|Warding Flare|Light Domain: for a round, attacks against you or an ally within 30 feet have disadvantage. From level 6 the ally also gains 2d6 + your Wisdom modifier temporary hit points. Wisdom modifier uses per long rest (short rest from level 6).
+B24LCORO|SPPR113B|0|Corona of Light|Light Domain: for a minute, enemies within 60 feet have disadvantage on saves against your spells and Channel Divinity. Wisdom modifier uses per long rest.
+B24TBLES|SPWI205B|1|Blessing of the Trickster|Trickery Domain: a creature you touch gets better at moving silently and hiding for an hour (standing in for advantage on Stealth).
+B24TDUPL|SPWI211B|0|Invoke Duplicity|Trickery Domain (Channel Divinity): an illusory double of you flickers next to your foes; for a minute you have advantage on attacks.
+B24WGSTR|SPPR212B|0|Guided Strike|War Domain (Channel Divinity): +10 to your attack rolls this round.
+B24WGBLS|OHTYR2C|30|War God's Blessing|War Domain (Channel Divinity): Shield of Faith on a creature within 30 feet, +2 AC for a minute, without concentration.
+B24WPRST|OHTMPS2C|0|War Priest|War Domain: one extra attack this round. Wisdom modifier uses per short rest.
+B24SWRAT|SPPR209B|0|Wrath of the Sea|Circle of the Sea (one Wild Shape use): for 10 minutes, each round an enemy next to you makes a Constitution save or takes cold damage (Wisdom modifier d6) and is pushed away.
+B24STARC|SPCL239C|0|Starry Form: Archer|Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Archer; each round you can loose a Luminous Arrow.
+B24STCHL|SPPR611C|0|Starry Form: Chalice|Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Chalice; your healing spells also heal the most hurt ally near you.
+B24STDRG|SPWI922C|0|Starry Form: Dragon|Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Dragon; a Constitution save never counts its d20 below 10.
+B24STARW|SPWI615C|60|Luminous Arrow|Starry Form (Archer), once per round: a ranged spell attack that deals 1d8 + your Wisdom modifier radiant damage (2d8 from level 10).
+B24MHARM|SPPR109B|0|Hand of Harm|Warrior of Mercy (one Focus Point): your next unarmed hit this round deals a Martial Arts die + your Wisdom modifier necrotic damage.
+B24MHHEL|SPPR103C|1|Hand of Healing|Warrior of Mercy (one Focus Point): the creature you touch regains a Martial Arts die + your Wisdom modifier hit points.
+B24MSART|SPWI815C|0|Shadow Arts|Warrior of Shadow (one Focus Point): shadows hide you; you are invisible for a minute or until you attack.
+B24MCLOA|SPWI405B|0|Cloak of Shadows|Warrior of Shadow (three Focus Points): improved invisibility for a minute.
+B24MSSTP|SPSD02C|0|Shadow Step|Warrior of Shadow, once per round: you slip through the shadows, move fast for a moment and have advantage on your next melee attack.
+B24MATTN|SPWI702C|0|Elemental Attunement|Warrior of the Elements (one Focus Point): for 10 minutes your unarmed hits deal cold damage and push the target 10 feet (Strength save).
+B24MBRST|SPWI404B|60|Elemental Burst|Warrior of the Elements (two Focus Points): a creature and those around it make a Dexterity save or take three Martial Arts dice of cold damage, half on a success.
+B24GINSP|SPPR101B|0|Inspiring Smite|Oath of Glory (Channel Divinity): you and your allies within 30 feet share 2d8 + your Paladin level temporary hit points.
+B24ANWRA|SPPR108B|0|Nature's Wrath|Oath of the Ancients (Channel Divinity): enemies within 15 feet make a Strength save or are restrained by spectral vines for a minute (a new save at the end of each round).
+B24VVOWE|SPPR511C|30|Vow of Enmity|Oath of Vengeance (Channel Divinity): for a minute you have advantage on attacks against the creature.
+B24GLEGD|SPPR203B|0|Living Legend|Oath of Glory: for a minute, once per round you reroll a failed save. Once per long rest.
+B24AELDR|SPPR202B|0|Elder Champion|Oath of the Ancients: for a minute you regain 10 hit points each round, and enemies in your aura have disadvantage on saves against your spells and Channel Divinity. Once per long rest.
+B24VANGL|SPPR727C|0|Avenging Angel|Oath of Vengeance: for 10 minutes, enemies that come within 30 feet make a Wisdom save or are frightened for a minute; attacks against them have advantage. Once per long rest.
+B24BEAST|PLYWOLFB|0|Primal Companion|Beast Master: summon your beast of the land, a wolf whose strength grows with your Ranger level. Once per long rest.
+B24PSBLA|SPWI518C|0|Psychic Blades|Soulknife: a blade of psychic energy forms in your hand for an hour (1d6, finesse, magical).
+B24PSVEL|SPWI721C|0|Psychic Veil|Soulknife: you are invisible for an hour or until you attack. Once per long rest; later uses cost a Psionic Energy Die.
+B24FOM1|SPWI590C|0|Create Spell Slot (1)|Font of Magic (2 Sorcery Points): a spent level 1 spell slot returns.
+B24FOM2|SPWI591C|0|Create Spell Slot (2)|Font of Magic (3 Sorcery Points): a spent level 2 spell slot returns.
+B24FOM3|SPWI592C|0|Create Spell Slot (3)|Font of Magic (5 Sorcery Points): a spent level 3 spell slot returns.
+B24FOM4|SPWI593C|0|Create Spell Slot (4)|Font of Magic (6 Sorcery Points): a spent level 4 spell slot returns.
+B24FOM5|SPWI594C|0|Create Spell Slot (5)|Font of Magic (7 Sorcery Points): a spent level 5 spell slot returns.
+B24AREVL|SPWI203B|0|Revelation in Flesh|Aberrant Sorcery (one Sorcery Point): for 10 minutes you see invisible creatures and move faster.
+B24AWARP|SPWI402B|0|Warping Implosion|Aberrant Sorcery: space folds around you; enemies within 30 feet make a Strength save or take 3d10 force damage, half on a success. Once per long rest, or 5 Sorcery Points.
+B24CBALN|SPPR104B|30|Restore Balance|Clockwork Sorcery: for a round, attacks against an ally within 30 feet can't have advantage. Proficiency Bonus uses per long rest.
+B24CBAST|SPWI406B|30|Bastion of Law|Clockwork Sorcery: spend up to 5 Sorcery Points; an ally within 30 feet gains that many d8 temporary hit points.
+B24CTRAN|SPWI414C|0|Trance of Order|Clockwork Sorcery: for a minute, attacks against you can't have advantage and your saves never count their d20 below 10. Once per long rest, or 5 Sorcery Points.
+B24CCAVL|SPPR605C|0|Clockwork Cavalcade|Clockwork Sorcery: allies within 30 feet share up to 100 hit points of healing. Once per long rest, or 7 Sorcery Points.
+B24WTIDE|SPWI208B|0|Tides of Chaos|Wild Magic Sorcery: advantage on your attacks and saves for a round. Once per long rest; a Wild Magic Surge restores it, and your next spell after using it surges.
+B24PORTN|SPWI301B|60|Portent|Diviner: the creature's next save uses one of your Portent rolls (the lowest for enemies, the highest for allies). The rolls are shown after each long rest.
+B24THEYE|SPWI425C|0|The Third Eye|Diviner: you see invisible creatures for an hour. Once per short rest.
+B24GDURB|SPPR550C|0|Speedy Recovery|Durable feat, once per short rest: spend one of your Hit Point Dice and regain its roll plus your Constitution modifier in hit points.
+B24GGRAP|SPCL811B|1|Grapple|Grappler feat, once per round: a creature next to you makes a Strength or Dexterity save or is grappled (it can't move and saves again at the end of each round). You have advantage on attacks against creatures you grapple.
+B24GTELE|SPWI212C|30|Telekinetic Shove|Telekinetic feat, once per round: a creature within 30 feet makes a Strength save against your spell save DC or is pushed 5 feet.
+B24MMCAR|SPWI201B|0|Careful Spell|Metamagic (1 Sorcery Point): your allies automatically succeed on their saves against your next spell and take no damage from it if they would take half.
+B24MMEMP|SPWI120C|0|Empowered Spell|Metamagic (1 Sorcery Point): when your next spell deals damage, up to your Charisma modifier of its low damage dice are rolled again.
+B24MMEXT|SPPR507C|0|Extended Spell|Metamagic (1 Sorcery Point): your next spell lasts twice as long, and you have advantage on saves to keep concentrating on it.
+B24MMHEI|SPWI204B|0|Heightened Spell|Metamagic (2 Sorcery Points): creatures make their saves against your next spell with disadvantage.
+B24MMQUI|SPWI105C|0|Quickened Spell|Metamagic (2 Sorcery Points): you cast your next spell much faster.
+B24MMSEE|SPCL121B|0|Seeking Spell|Metamagic (1 Sorcery Point): if your next spell's attack roll misses, roll it again.
+B24MMTRA|SPWI207C|0|Transmuted Spell|Metamagic (1 Sorcery Point): acid, cold, fire, lightning or poison damage of your next spell turns into the type the target resists least.
+B24CDIVI|SPPR703C|0|Divine Intervention|Cleric, once per long rest: choose a Cleric spell of level 5 or lower (at level 20 also Wish, where the game has it) and cast it once without a spell slot.
+B24INSO2|SPWI222C|0|Innate Sorcery (Sorcery Incarnate)|Sorcery Incarnate (2 Sorcery Points, once Innate Sorcery has no uses left): Innate Sorcery for a minute (+1 spell save DC, advantage on spell attacks, two Metamagic options per spell).
+B24DRWNG|SPWI505C|0|Dragon Wings|Draconic Sorcery, once per long rest: for an hour you move faster, and webs, entangling plants and grease can't hold you (BG has no flying).
+B24OVCHN|SPWI502C|0|Overchannel|Evoker: your next wizard spell of level 1 to 5 deals its maximum damage. The first use after a long rest is free; each later one costs you 2d12 necrotic damage per spell level, a d12 more per level each time.
+B24WCOMP|SPPR109C|0|Wild Companion|Druid (one Wild Shape use): a spirit animal (in BG: a wolf) fights at your side for an hour.
+B24WRES1|SPPR208C|0|Wild Resurgence: Spell Slot to Wild Shape|Druid, once per round when you have no Wild Shape uses left: your lowest ready spell slot turns into one Wild Shape use.
+B24WRES2|SPPR208C|0|Wild Resurgence: Wild Shape to Spell Slot|Druid, once per long rest: a Wild Shape use brings back one spent 1st-level spell slot.
+B24NSANC|SPPR212C|0|Nature's Sanctuary|Circle of the Land (one Wild Shape use): for a minute you and the allies near you get +2 Armor Class and your land's Nature's Ward resistance.
+B24NMAGI|SPPR405C|0|Nature Magician|Archdruid, once per long rest: Wild Shape uses bring back a spent spell slot, two spell levels per use.
+B24WSHAP|SPCL621C|0|Wild Shape|Druid (one Wild Shape use): take the shape of a beast for half your Druid level in hours. You gain temporary hit points equal to your Druid level (three times your Druid level in the Circle of the Moon).\n\nYour Strength, Dexterity, Constitution, Armor Class, attacks and attack bonus become the beast's; you keep your hit points, Intelligence, Wisdom, Charisma, class features and feats. You can't cast spells (from Druid level 18 you can), and your equipment merges into the form. The form ends early when you are incapacitated, drop to 0 hit points or use Natural Form.\n\nForms: Challenge Rating 1/4 from Druid level 2, 1/2 from 4, 1 from 8. The Circle of the Moon reaches Challenge Rating 1 at level 3 and 2 at level 6. BG has no flying forms.
+B24WSEND|IHUMB|0|Wild Shape: Natural Form|Leave your Wild Shape form early and return to your own shape.
+B24WFWOL|SPIN110B|0|Wild Shape: Wolf|Beast form, Challenge Rating 1/4 (Druid level 2).\n\nAC 12; Strength 14, Dexterity 15, Constitution 12\nBite: +4 to hit, 1d6+2 piercing; a Medium or smaller target falls prone\nPack Tactics: advantage on attacks against a target that an ally stands next to
+B24WFPAN|SPCL621C|0|Wild Shape: Panther|Beast form, Challenge Rating 1/4 (Druid level 2).\n\nAC 13; Strength 14, Dexterity 16, Constitution 10\nRend: +5 to hit, 1d6+3 slashing
+B24WFGWS|SPCL632B|0|Wild Shape: Giant Wolf Spider|Beast form, Challenge Rating 1/4 (Druid level 2).\n\nAC 13; Strength 12, Dexterity 16, Constitution 13\nBite: +5 to hit, 1d4+3 piercing plus 2d4 poison
+B24WFBOA|SPCL621C|0|Wild Shape: Boar|Beast form, Challenge Rating 1/4 (Druid level 2).\n\nAC 11; Strength 13, Dexterity 11, Constitution 14\nGore: +3 to hit, 1d6+1 piercing\nBloodied Fury: advantage on attacks while at half hit points or less
+B24WFGVS|SPCL621C|0|Wild Shape: Giant Venomous Snake|Beast form, Challenge Rating 1/4 (Druid level 2).\n\nAC 14; Strength 10, Dexterity 18, Constitution 13\nBite: +6 to hit, 1d4+4 piercing plus 1d8 poison
+B24WFBBR|SPIN111B|0|Wild Shape: Black Bear|Beast form, Challenge Rating 1/2 (Druid level 4).\n\nAC 11; Strength 15, Dexterity 12, Constitution 14\nTwo Rends: +4 to hit, 1d6+2 slashing
+B24WFWHR|SPCL621C|0|Wild Shape: Warhorse|Beast form, Challenge Rating 1/2 (Druid level 4).\n\nAC 11; Strength 18, Dexterity 12, Constitution 13\nHooves: +6 to hit, 2d4+4 bludgeoning
+B24WFBRB|SPIN107B|0|Wild Shape: Brown Bear|Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).\n\nAC 11; Strength 17, Dexterity 12, Constitution 15\nBite and Claw: +5 to hit, 1d6+3 (bite 1d8+3 piercing, claw 1d4+3 slashing); once a round a Large or smaller target falls prone
+B24WFDWO|SPIN110B|0|Wild Shape: Dire Wolf|Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).\n\nAC 14; Strength 17, Dexterity 15, Constitution 15\nBite: +5 to hit, 1d10+3 piercing; a Large or smaller target falls prone\nPack Tactics: advantage on attacks against a target that an ally stands next to
+B24WFGSP|SPCL632B|0|Wild Shape: Giant Spider|Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).\n\nAC 14; Strength 14, Dexterity 16, Constitution 12\nBite: +5 to hit, 1d8+3 piercing plus 2d6 poison
+B24WFTIG|SPCL621C|0|Wild Shape: Tiger|Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).\n\nAC 13; Strength 17, Dexterity 16, Constitution 14\nRend: +5 to hit, 2d6+3 slashing; a Large or smaller target falls prone
+B24WFPBR|SPIN107B|0|Wild Shape: Polar Bear|Beast form, Challenge Rating 2 (Circle of the Moon 6).\n\nAC 12; Strength 20, Dexterity 14, Constitution 16\nTwo Rends: +7 to hit, 1d8+5 slashing\nResistance to cold
+B24WFGBO|SPCL621C|0|Wild Shape: Giant Boar|Beast form, Challenge Rating 2 (Circle of the Moon 6).\n\nAC 13; Strength 17, Dexterity 10, Constitution 16\nGore: +5 to hit, 2d6+3 piercing\nBloodied Fury: advantage on attacks while at half hit points or less
+B24RCPOI|SPWI213C|0|Cunning Strike: Poison|Rogue: your next Sneak Attack gives up 1d6; the target makes a Constitution save or is poisoned for a minute.
+B24RCTRP|SPWI101C|0|Cunning Strike: Trip|Rogue: your next Sneak Attack gives up 1d6; the target makes a Dexterity save or falls prone.
+B24RCWTH|SPWI105C|0|Cunning Strike: Withdraw|Rogue: your next Sneak Attack gives up 1d6; you get another round's worth of movement.
+B24RCDAZ|SPWI204B|0|Devious Strike: Daze|Rogue: your next Sneak Attack gives up 2d6; the target makes a Constitution save or is slowed for a round (only a move or an action).
+B24RCKNO|SPWI116C|0|Devious Strike: Knock Out|Rogue: your next Sneak Attack gives up 6d6; the target makes a Constitution save or falls unconscious for a minute (damage wakes it).
+B24RCOBS|SPWI207C|0|Devious Strike: Obscure|Rogue: your next Sneak Attack gives up 3d6; the target makes a Dexterity save or is blinded until the end of its next turn.
+B24MULTM|SPPR504C|1|Hand of Ultimate Mercy|Warrior of Mercy, once per long rest (5 Focus): touch a creature that died less than 24 hours ago; it returns to life with 4d10 + your Wisdom modifier hit points.
+B24WTAME|SPWI609C|0|Tamed Surge|Wild Magic, once per long rest, right after you cast a spell: choose the Wild Magic Surge it sets off.
+B24IPHAN|SPWI506C|0|Phantasmal Creatures|Illusionist, once per long rest: an illusory beast fights at your side for an hour (Summon Beast without a spell slot).

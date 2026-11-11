@@ -1,0 +1,185 @@
+-- BG 2024 Rules Mod: background and lineage popups of character creation (see B24CHGEN.lua). Laid
+-- out like the game's character creation windows (GUICGWDE: list on the left, details on the
+-- right, two buttons at the bottom).
+
+menu
+{
+	name 'B24_BACKGROUND'
+	align center center
+	modal
+	ignoreesc
+	onopen "B24CG_BgOpen()"
+
+	label
+	{
+		area 0 0 864 710
+		mosaic GUICGWDE
+	}
+	label
+	{
+		area 60 37 744 44
+		text lua "B24CG_Text('BG_TITLE')"
+		text style "title"
+	}
+	list
+	{
+		column
+		{
+			width 100
+			label
+			{
+				area 0 0 340 44
+				text lua "B24CG_BgName(rowNumber)"
+				text style "list"
+				pad 8 0 0 0
+			}
+		}
+		action "B24CG_BgSelect(b24cgBgRow)"
+		rowheight 44
+		area 22 100 340 490
+		table "B24CG.BACKGROUNDS"
+		var b24cgBgRow
+		scrollbar 'GUISCRC'
+	}
+	text
+	{
+		area 380 100 456 240
+		text lua "B24CG_BgHelp()"
+		text style "normal"
+		scrollbar 'GUISCRC'
+	}
+
+	label
+	{
+		area 380 350 230 30
+		text lua "B24CG_Text('BG_BONUS')"
+		text style "normal"
+		text align left center
+	}
+	button
+	{
+		area 380 384 230 40
+		bam GUIBUTMT
+		text lua "B24CG_BonusText(1)"
+		text style "button"
+		action "B24CG_CycleBonus(1)"
+	}
+	button
+	{
+		area 380 430 230 40
+		bam GUIBUTMT
+		text lua "B24CG_BonusText(2)"
+		text style "button"
+		action "B24CG_CycleBonus(2)"
+	}
+	button
+	{
+		area 380 476 230 40
+		bam GUIBUTMT
+		text lua "B24CG_BonusText(3)"
+		text style "button"
+		action "B24CG_CycleBonus(3)"
+	}
+
+	label
+	{
+		enabled "B24CG_IsHuman()"
+		area 616 350 220 30
+		text lua "B24CG_Text('BG_FEAT')"
+		text style "normal"
+		text align left center
+	}
+	button
+	{
+		enabled "B24CG_IsHuman()"
+		area 606 384 230 40
+		bam GUIBUTMT
+		text lua "B24CG_FeatText()"
+		text style "button"
+		action "B24CG_CycleFeat()"
+	}
+	label
+	{
+		area 380 530 456 60
+		text lua "B24CG_BgStatus()"
+		text style "normal"
+		text align left center
+	}
+
+	button
+	{
+		on escape
+		area 196 653 230 40
+		bam GUIBUTMT
+		text lua "B24CG_Text('CANCEL')"
+		text style "button"
+		action "B24CG_BgCancel()"
+	}
+	button
+	{
+		on return
+		area 438 653 230 40
+		bam GUIBUTMT
+		text lua "B24CG_Text('DONE')"
+		text style "button"
+		action "B24CG_BgDone()"
+	}
+}
+
+-- Lineage popup of the species step (Dragonborn ancestry, Goliath giant ancestry, Tiefling legacy).
+menu
+{
+	name 'B24_LINEAGE'
+	align center center
+	modal
+	ignoreesc
+	onopen "B24CG_LineageOpen()"
+
+	label
+	{
+		area 0 0 864 710
+		mosaic GUICGWDE
+	}
+	label
+	{
+		area 60 37 744 44
+		text lua "B24CG_LineageTitle()"
+		text style "title"
+	}
+	list
+	{
+		column
+		{
+			width 100
+			label
+			{
+				area 0 0 340 44
+				text lua "B24CG_LineageName(rowNumber)"
+				text style "list"
+				pad 8 0 0 0
+			}
+		}
+		action "B24CG_LineageSelect(b24cgLineageRow)"
+		rowheight 44
+		area 22 100 340 490
+		table "B24CG.LINEAGE_ROWS"
+		var b24cgLineageRow
+		scrollbar 'GUISCRC'
+	}
+	text
+	{
+		area 380 100 456 490
+		text lua "B24CG_LineageHelp()"
+		text style "normal"
+		scrollbar 'GUISCRC'
+	}
+	button
+	{
+		on return
+		area 438 653 230 40
+		bam GUIBUTMT
+		text lua "B24CG_Text('DONE')"
+		text style "button"
+		action "B24CG_LineageDone()"
+	}
+}

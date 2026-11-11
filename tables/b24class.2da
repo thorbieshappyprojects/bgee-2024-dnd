@@ -1,0 +1,25 @@
+2DA V1.0
+NONE
+                CLASS                   HIT_DIE  SAVE1  SAVE2  ARCANE  DIVINE
+1               MAGE                    6        INT    WIS    INT     NONE
+2               FIGHTER                 10       STR    CON    NONE    NONE
+3               CLERIC                  8        WIS    CHA    NONE    WIS
+4               THIEF                   8        DEX    INT    NONE    NONE
+5               BARD                    8        DEX    CHA    CHA     NONE
+6               PALADIN                 10       WIS    CHA    NONE    CHA
+7               FIGHTER_MAGE            10       STR    CON    INT     NONE
+8               FIGHTER_CLERIC          10       STR    CON    NONE    WIS
+9               FIGHTER_THIEF           10       STR    CON    NONE    NONE
+10              FIGHTER_MAGE_THIEF      10       STR    CON    INT     NONE
+11              DRUID                   8        INT    WIS    NONE    WIS
+12              RANGER                  10       STR    DEX    NONE    WIS
+13              MAGE_THIEF              6        INT    WIS    INT     NONE
+14              CLERIC_MAGE             8        WIS    CHA    INT     WIS
+15              CLERIC_THIEF            8        WIS    CHA    NONE    WIS
+16              FIGHTER_DRUID           10       STR    CON    NONE    WIS
+17              FIGHTER_MAGE_CLERIC     10       STR    CON    INT     WIS
+18              CLERIC_RANGER           8        WIS    CHA    NONE    WIS
+19              SORCERER                6        CON    CHA    CHA     NONE
+20              MONK                    8        STR    DEX    NONE    WIS
+21              SHAMAN                  8        WIS    CHA    NONE    WIS
+BARBARIAN       BARBARIAN               12       STR    CON    NONE    NONE

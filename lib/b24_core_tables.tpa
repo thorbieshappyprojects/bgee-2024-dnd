@@ -1,0 +1,158 @@
+// Core rules: rule tables shared by every creature.
+
+// Ability modifiers (score - 10) / 2 for Strength to-hit and damage.
+COPY_EXISTING ~strmod.2da~ ~override~
+  COUNT_2DA_ROWS 5 rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 5 score
+    LPF b24_ability_mod INT_VAR score RET mod END
+    SET_2DA_ENTRY r 1 5 mod
+    SET_2DA_ENTRY r 2 5 mod
+  END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// No exceptional Strength (18/xx) bonuses.
+COPY_EXISTING ~strmodex.2da~ ~override~
+  LPF b24_set_2da_column INT_VAR column = 1 req_cols = 5 value = 0 END
+  LPF b24_set_2da_column INT_VAR column = 2 req_cols = 5 value = 0 END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Dexterity: ranged to-hit and AC use the 2024 modifier (engine AC is lower-is-better).
+COPY_EXISTING ~dexmod.2da~ ~override~
+  COUNT_2DA_ROWS 4 rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 4 score
+    LPF b24_ability_mod INT_VAR score RET mod END
+    SET_2DA_ENTRY r 2 4 mod
+    SET_2DA_ENTRY r 3 4 (0 - mod)
+  END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Constitution: the 2024 modifier to hit points per level for every class.
+COPY_EXISTING ~hpconbon.2da~ ~override~
+  COUNT_2DA_ROWS 6 rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 6 score
+    LPF b24_ability_mod INT_VAR score RET mod END
+    SET_2DA_ENTRY r 1 6 mod
+    SET_2DA_ENTRY r 2 6 mod
+  END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Proficiency replaces THAC0 progression: THAC0 = 20 - proficiency bonus, for all classes.
+// The ability part comes from STRMOD / DEXMOD.
+COPY_EXISTING ~thac0.2da~ ~override~
+  COUNT_2DA_COLS cols
+  COUNT_2DA_ROWS cols rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    FOR (c = 1; c < cols; ++c) BEGIN
+      LPF b24_prof_bonus INT_VAR level = c RET prof END
+      SET_2DA_ENTRY r c cols (20 - prof)
+    END
+  END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Thief skills come from 2024 skill bonuses (B24PROF.lua), which include the Dexterity modifier.
+COPY_EXISTING ~skilldex.2da~ ~override~
+  FOR (c = 1; c <= 7; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = 8 value = 0 END
+  END
+BUT_ONLY
+
+// 2024 has no weapon style bonuses or two-weapon attack penalties (fighting styles are feats,
+// see the Fighter component).
+COPY_EXISTING ~stylbonu.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  FOR (c = 1; c < b24_cols; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = b24_cols value = 0 END
+  END
+  BUT_ONLY
+
+// Weapon proficiency stars no longer add to hit or damage; proficiency is the flat bonus above.
+COPY_EXISTING ~wspecial.2da~ ~override~
+  LPF b24_set_2da_column INT_VAR column = 1 req_cols = 4 value = 0 END
+  LPF b24_set_2da_column INT_VAR column = 2 req_cols = 4 value = 0 END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Warrior attacks per round: Extra Attack (2 attacks) at level 5, no specialization bonus.
+// Fighter-only extra attacks at 11 and 20 come with the Fighter component.
+COPY_EXISTING ~wspatck.2da~ ~override~
+  COUNT_2DA_COLS cols
+  COUNT_2DA_ROWS cols rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    FOR (c = 1; c < cols; ++c) BEGIN
+      SET_2DA_ENTRY r c cols ((c >= 5) ? 1 : 0)
+    END
+  END
+  PRETTY_PRINT_2DA
+BUT_ONLY
+
+// Hit points: maximum hit die at level 1, then the fixed 2024 average per level up to 20,
+// nothing above 20. Rows are value x 1d1 with no modifier (BG:EE ignores the modifier column for
+// level 1, which left characters at 1 HP); the engine adds the Con bonus on top.
+COPY - ~bg2024/tables/b24hp.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24hp_rows 5
+  FOR (r = 0; r < b24hp_rows; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24hp_rows r 0 table
+    READ_2DA_ENTRY_FORMER b24hp_rows r 1 level1
+    READ_2DA_ENTRY_FORMER b24hp_rows r 2 even
+    READ_2DA_ENTRY_FORMER b24hp_rows r 3 odd
+    TO_UPPER table
+    SET $b24_hp_level1(~%table%~) = level1
+    SET $b24_hp_even(~%table%~) = even
+    SET $b24_hp_odd(~%table%~) = odd
+  END
+
+ACTION_PHP_EACH b24_hp_level1 AS table => level1 BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%table%.2da~ BEGIN
+    OUTER_SET even = $b24_hp_even(~%table%~)
+    OUTER_SET odd = $b24_hp_odd(~%table%~)
+    COPY_EXISTING ~%table%.2da~ ~override~
+      COUNT_2DA_ROWS 4 rows
+      FOR (r = 0; r < rows; ++r) BEGIN
+        READ_2DA_ENTRY r 0 4 level
+        PATCH_IF (level == 1) BEGIN
+          SET hp = level1
+        END ELSE PATCH_IF (level <= 20) BEGIN
+          SET hp = ((level BAND 1) == 0) ? even : odd
+        END ELSE BEGIN
+          SET hp = 0
+        END
+        SET_2DA_ENTRY r 1 4 ((hp > 0) ? 1 : 0)
+        SET_2DA_ENTRY r 2 4 hp
+        SET_2DA_ENTRY r 3 4 0
+      END
+      PRETTY_PRINT_2DA
+    BUT_ONLY
+  END
+END
+
+// Warn about HP tables used by HPCLASS.2DA that the mod does not know (e.g. from other mods).
+COPY_EXISTING ~hpclass.2da~ ~override~
+  COUNT_2DA_ROWS 2 rows
+  FOR (r = 0; r < rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 2 label
+    READ_2DA_ENTRY r 1 2 table
+    TO_UPPER table
+    PATCH_IF (NOT (~%label%~ STRING_EQUAL_CASE ~2DA~) AND NOT VARIABLE_IS_SET $b24_hp_level1(~%table%~)) BEGIN
+      PATCH_PRINT ~BG2024 warning: HP table %table% is not converted to 2024 hit points.~
+    END
+  END
+BUT_ONLY
+
+// 2024 species have no weapon attack bonuses (2e: elves with swords and bows, halflings with
+// slings). Column 1 is the weapon name.
+ACTION_IF FILE_EXISTS_IN_GAME ~racethac.2da~ BEGIN
+  COPY_EXISTING ~racethac.2da~ ~override~
+    COUNT_2DA_COLS b24_cols
+    FOR (c = 2; c < b24_cols; ++c) BEGIN
+      LPF b24_set_2da_column INT_VAR column = c req_cols = b24_cols value = 0 END
+    END
+    BUT_ONLY
+END

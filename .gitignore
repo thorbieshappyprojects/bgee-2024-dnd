@@ -1,0 +1,19 @@
+# Local tools (WeiDU binary etc.)
+tools/*
+
+# Built at install time
+spells/generated/*
+!spells/generated/.gitkeep
+
+# WeiDU output if run in-tree
+*.debug
+weidu_external/
+!tools/luacheck.pl
+!tools/gen_innates.pl
+!tools/subclass_innates.txt
+!tools/datacheck.pl
+!tools/balance.pl
+!tools/png2bam.pl
+!tools/icon-prompts.pl
+!tools/ingame-test.ps1
+!tools/ingame/

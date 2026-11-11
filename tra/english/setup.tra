@@ -1,0 +1,1028 @@
+@1 = ~Core rules (2024 ability modifiers, proficiency, AC, hit points, saves, advantage, concentration, rests)~
+@2 = ~This mod requires BG:EE or BG2:EE.~
+@3 = ~This component requires EEex v1.3.0 or newer. Install EEex first.~
+@4 = ~Monster math pass (AC, attack bonus and ability scores of non-party creatures)~
+@5 = ~The monster math pass requires the core rules component.~
+@6 = ~Character creation (2024 ability scores and backgrounds)~
+@7 = ~Character creation requires the core rules component.~
+
+@100 = ~Short Rest~
+@101 = ~Short Rest
+
+The party rests for one hour. Each character spends Hit Dice until fully healed or out of dice: each die heals its roll plus the Constitution modifier. Abilities that recharge on a short rest are restored.
+
+The party can take two short rests between long rests. A short rest is not possible while enemies are nearby. Hit Dice and short rests are regained on a long rest.~
+
+@102 = ~Adrenaline Rush~
+@103 = ~Adrenaline Rush
+
+Orc trait: for one round you move half again as fast, and you gain temporary hit points equal to your Proficiency Bonus for one minute (added to your maximum and current hit points).
+
+Usable twice per long rest.~
+
+@104 = ~Healing Hands~
+@105 = ~Healing Hands
+
+Aasimar trait: touch a creature; it regains a number of d4 hit points equal to your Proficiency Bonus.
+
+Usable once per long rest.~
+
+@106 = ~Breath Weapon~
+@110 = ~Breath Weapon (acid)
+
+Dragonborn trait: you exhale a cone of acid. Creatures in the cone take 1d10 acid damage (2d10 at level 5, 3d10 at level 11, 4d10 at level 17), half on a successful Dexterity saving throw (DC 8 + Constitution modifier + Proficiency Bonus).
+
+Usable twice per long rest.~
+@111 = ~Breath Weapon (cold)
+
+Dragonborn trait: you exhale a cone of frost. Creatures in the cone take 1d10 cold damage (2d10 at level 5, 3d10 at level 11, 4d10 at level 17), half on a successful Dexterity saving throw (DC 8 + Constitution modifier + Proficiency Bonus).
+
+Usable twice per long rest.~
+@112 = ~Breath Weapon (lightning)
+
+Dragonborn trait: you exhale a cone of lightning. Creatures in the cone take 1d10 lightning damage (2d10 at level 5, 3d10 at level 11, 4d10 at level 17), half on a successful Dexterity saving throw (DC 8 + Constitution modifier + Proficiency Bonus).
+
+Usable twice per long rest.~
+@113 = ~Breath Weapon (fire)
+
+Dragonborn trait: you exhale a cone of fire. Creatures in the cone take 1d10 fire damage (2d10 at level 5, 3d10 at level 11, 4d10 at level 17), half on a successful Dexterity saving throw (DC 8 + Constitution modifier + Proficiency Bonus).
+
+Usable twice per long rest.~
+@114 = ~Breath Weapon (poison)
+
+Dragonborn trait: you exhale a cone of poison gas. Creatures in the cone take 1d10 poison damage (2d10 at level 5, 3d10 at level 11, 4d10 at level 17), half on a successful Dexterity saving throw (DC 8 + Constitution modifier + Proficiency Bonus).
+
+Usable twice per long rest.~
+
+@120 = ~Cloud's Jaunt~
+@121 = ~Cloud's Jaunt
+
+Goliath trait (cloud giant ancestry): you magically teleport to a spot you can see nearby.
+
+Usable twice per long rest.~
+@122 = ~Fire's Burn~
+@123 = ~Fire's Burn
+
+Goliath trait (fire giant ancestry): your next weapon hit within one round deals an extra 1d10 fire damage.
+
+Usable twice per long rest.~
+@124 = ~Frost's Chill~
+@125 = ~Frost's Chill
+
+Goliath trait (frost giant ancestry): your next weapon hit within one round deals an extra 1d6 cold damage and slows the target for one round.
+
+Usable twice per long rest.~
+@126 = ~Hill's Tumble~
+@127 = ~Hill's Tumble
+
+Goliath trait (hill giant ancestry): your next weapon hit within one round knocks the target prone for one round.
+
+Usable twice per long rest.~
+@128 = ~Stone's Endurance~
+@129 = ~Stone's Endurance
+
+Goliath trait (stone giant ancestry): the next damage you take within one round is reduced by 1d12 + your Constitution modifier.
+
+Usable twice per long rest.~
+@130 = ~Storm's Thunder~
+@131 = ~Storm's Thunder
+
+Goliath trait (storm giant ancestry): the next creature that damages you within one round takes 1d8 thunder damage (in BG: lightning).
+
+Usable twice per long rest.~
+
+// Species descriptions for character creation (RACETEXT.2DA DESCSTR). Ability score increases
+// come from the background in the 2024 rules, so no species has any.
+@200 = ~HUMAN: Humans are the most widespread people of Faerûn, found in every land and every walk of life. Ambitious and adaptable, they make up for their short lives with drive and variety.
+
+Species traits:
+– Resourceful: you gain Heroic Inspiration after every long rest.
+– Skillful: proficiency in one extra skill.
+– Versatile: an extra origin feat, chosen together with your background.
+
+Your ability score increases come from your background.~
+@201 = ~ELF: Elves are a magical people of otherworldly grace, living for centuries in harmony with the world around them. They rarely sleep, and their keen eyes miss little.
+
+Species traits:
+– Darkvision (infravision).
+– Fey Ancestry: advantage on saving throws against being charmed.
+– Keen Senses: proficiency in Perception.
+– Trance: magic can't put you to sleep.
+
+Your ability score increases come from your background.~
+@202 = ~HALF-ELF: Half-elves carry the blood of both humans and elves. The 2024 rules have no separate half-elf species, so in this mod they use the elven traits.
+
+Species traits:
+– Darkvision (infravision).
+– Fey Ancestry: advantage on saving throws against being charmed.
+– Keen Senses: proficiency in Perception.
+– Trance: magic can't put you to sleep.
+
+Your ability score increases come from your background.~
+@203 = ~DWARF: Dwarves are a stout and hardy people, shaped by mountain halls and the stone they work. They are slow to trust and slower to forget, and as tough as the rock they live in.
+
+Species traits:
+– Darkvision (infravision).
+– Dwarven Resilience: resistance to poison damage and advantage on saving throws against poison.
+– Dwarven Toughness: +1 hit point per level.
+
+Your ability score increases come from your background.~
+@204 = ~HALFLING: Halflings are a small, cheerful people who value home and good company, yet often find themselves on great adventures. Their luck is legendary.
+
+Species traits:
+– Brave: advantage on saving throws against being frightened.
+– Luck: when you roll a 1 on a saving throw, you reroll it.
+– Naturally Stealthy: a bonus to Move Silently and Hide in Shadows.
+
+Your ability score increases come from your background.~
+@205 = ~GNOME: Gnomes are small, curious and inventive, with an endless love for tinkering, illusions and riddles. Their quick minds are hard to fool.
+
+Species traits:
+– Darkvision (infravision).
+– Gnomish Cunning: advantage on Intelligence, Wisdom and Charisma saving throws.
+
+Your ability score increases come from your background.~
+@206 = ~HALF-ORC: Half-orcs carry the blood of both humans and orcs. The 2024 rules have no separate half-orc species, so in this mod they use the orc traits.
+
+Species traits:
+– Darkvision (infravision).
+– Adrenaline Rush: an innate ability you can use twice per long rest; you move faster for a round and gain temporary hit points equal to your Proficiency Bonus.
+– Relentless Endurance: once per long rest, when you drop to 0 hit points without being killed outright, you drop to 1 hit point instead.
+
+Your ability score increases come from your background.~
+
+// Fighter component.
+@8 = ~Classes (2024 class features, all PHB 2024 subclasses, level-up choices)~
+@9 = ~The class component requires the core rules component.~
+@140 = ~Second Wind~
+@141 = ~Second Wind
+
+Fighter feature: you regain 1d10 + your Fighter level hit points. From level 5 (Tactical Shift) you also move faster for a round.
+
+Uses: 2 (3 at level 4, 4 at level 10). A short rest restores one use, a long rest all.~
+@142 = ~Action Surge~
+@143 = ~Action Surge
+
+Fighter feature: for one round you make another full set of attacks, and your spells are cast faster.
+
+Uses: 1 (2 at level 17), restored by a short or long rest.~
+@144 = ~Tactical Master~
+@145 = ~Tactical Master
+
+Fighter feature (level 9): switch the mastery property your mastered weapons use: their own, Push, Sap or Slow. Each use moves to the next one.~
+@146 = ~Choose: Ability Score Improvement~
+@147 = ~Ability Score Improvement
+
+Raise one ability score by 2, or two ability scores by 1 each, to at most 20.~
+@148 = ~Choose: Fighting Style~
+@149 = ~Fighting Style
+
+Choose a Fighting Style feat: Archery, Defense, Great Weapon Fighting or Two-Weapon Fighting.~
+@150 = ~Choose: Weapon Mastery~
+@151 = ~Weapon Mastery
+
+Choose another weapon whose mastery property you can use.~
+@152 = ~Choose: Subclass~
+@153 = ~Subclass
+
+Choose your subclass (Fighter: level 3).~
+
+// Barbarian and Rogue.
+@154 = ~Rage~
+@155 = ~Rage
+
+Barbarian feature: for one minute you deal extra damage with Strength (melee) attacks, resist slashing, crushing and piercing damage, and have advantage on Strength saving throws.
+
+Uses: 2 (3 at level 3, 4 at 6, 5 at 12, 6 at 17). A short rest restores one use, a long rest all.~
+@156 = ~Reckless Attack~
+@157 = ~Reckless Attack
+
+Barbarian feature: for one round your attacks have advantage, and attacks against you have advantage too. Usable every round.~
+@158 = ~Intimidating Presence~
+@159 = ~Intimidating Presence
+
+Berserker feature (level 14): enemies around you make a Wisdom saving throw or are frightened for one minute. Once per long rest.~
+@160 = ~Cunning Action~
+@161 = ~Cunning Action
+
+Rogue feature: you Dash, moving twice as fast for a round. Usable every round.~
+@162 = ~Steady Aim~
+@163 = ~Steady Aim
+
+Rogue feature (level 3): you stand still and aim; your next attack this round has advantage. Usable every round.~
+@164 = ~Choose: Expertise~
+@165 = ~Expertise
+
+Choose a skill or tool you are proficient in; your proficiency bonus is doubled for it.~
+
+// Monk, Paladin, Ranger.
+@166 = ~Flurry of Blows~
+@167 = ~Flurry of Blows
+
+Monk feature (1 Focus Point): extra unarmed strikes this round (two from level 10).~
+@168 = ~Patient Defense~
+@169 = ~Patient Defense
+
+Monk feature (1 Focus Point): attacks against you have disadvantage for a round.~
+@170 = ~Step of the Wind~
+@171 = ~Step of the Wind
+
+Monk feature (1 Focus Point): you move twice as fast for a round.~
+@172 = ~Stunning Strike~
+@173 = ~Stunning Strike
+
+Monk feature (level 5, 1 Focus Point): your next hit this round forces a Constitution save or stuns the target for a round. On a success its speed is halved and the next attack against it has advantage.~
+@174 = ~Uncanny Metabolism~
+@175 = ~Uncanny Metabolism
+
+Monk feature (level 2): regain all Focus Points and heal your Martial Arts die + Monk level. Once per long rest.~
+@176 = ~Wholeness of Body~
+@177 = ~Wholeness of Body
+
+Warrior of the Open Hand (level 6): heal your Martial Arts die + Wisdom modifier. Wisdom modifier times per long rest.~
+@178 = ~Superior Defense~
+@179 = ~Superior Defense
+
+Monk feature (level 18, 3 Focus Points): resistance to all damage except force for one minute.~
+@180 = ~Quivering Palm~
+@181 = ~Quivering Palm
+
+Warrior of the Open Hand (level 17, 4 Focus Points): touch a creature; it makes a Constitution save or takes 10d12 force damage (half on a success).~
+@182 = ~Lay on Hands~
+@183 = ~Lay on Hands
+
+Paladin feature: touch a creature to heal it from your pool of healing (5 x Paladin level hit points per long rest).~
+@184 = ~Divine Smite~
+@185 = ~Divine Smite
+
+Paladin feature (level 2): switch Divine Smite on or off. While it is on, the first melee weapon hit of each round deals 2d8 extra radiant damage (more at higher levels) and spends a use. A miss costs nothing, and your attacks go on without interruption.
+
+Uses per long rest: one free use plus the number of your 2024 Paladin spell slots.~
+@186 = ~Sacred Weapon~
+@187 = ~Sacred Weapon
+
+Oath of Devotion (Channel Divinity): add your Charisma modifier (at least +1) to attack rolls for 10 minutes.~
+@188 = ~Abjure Foes~
+@189 = ~Abjure Foes
+
+Paladin feature (level 9, Channel Divinity): enemies around you make a Wisdom save or are frightened for one minute.~
+@190 = ~Holy Nimbus~
+@191 = ~Holy Nimbus
+
+Oath of Devotion (level 20): for 10 minutes, enemies near you take radiant damage equal to your Charisma modifier + Proficiency Bonus every round. Once per long rest.~
+@192 = ~Hunter's Mark~
+@193 = ~Hunter's Mark
+
+Ranger feature (Favored Enemy): mark a creature for an hour; your weapon hits against it deal 1d6 extra damage (1d10 at level 20). Uses per long rest: 2 (3 at 5, 4 at 9, 5 at 13, 6 at 17).~
+@194 = ~Tireless~
+@195 = ~Tireless
+
+Ranger feature (level 10): gain 1d8 + Wisdom modifier temporary hit points. Wisdom modifier times per long rest.~
+@196 = ~Nature's Veil~
+@197 = ~Nature's Veil
+
+Ranger feature (level 14): you become invisible until the end of your next round. Wisdom modifier times per long rest.~
+
+// Spells component.
+@10 = ~Spells (2024 spell slots, spell catalog, upcasting, cantrips, new 2024 spells)~
+@11 = ~The Spells component requires the core rules component.~
+
+// Cantrips: innate, usable at will. Damage dice: 1 (2 at level 5, 3 at 11, 4 at 17).
+@300 = ~Acid Splash~
+@301 = ~Acid Splash (cantrip)
+
+A creature makes a Dexterity saving throw or takes 1d6 acid damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@302 = ~Chill Touch~
+@303 = ~Chill Touch (cantrip)
+
+Make a melee spell attack: 1d10 necrotic damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@304 = ~Fire Bolt~
+@305 = ~Fire Bolt (cantrip)
+
+Make a ranged spell attack: 1d10 fire damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@306 = ~Poison Spray~
+@307 = ~Poison Spray (cantrip)
+
+Make a ranged spell attack: 1d12 poison damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@308 = ~Ray of Frost~
+@309 = ~Ray of Frost (cantrip)
+
+Make a ranged spell attack: 1d8 cold damage and the target is slowed for a round (more dice at character levels 5, 11 and 17). Usable at will.~
+@310 = ~Shocking Grasp~
+@311 = ~Shocking Grasp (cantrip)
+
+Make a melee spell attack: 1d8 lightning damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@312 = ~Sorcerous Burst~
+@313 = ~Sorcerous Burst (cantrip)
+
+Make a ranged spell attack: 1d8 fire damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@314 = ~Sacred Flame~
+@315 = ~Sacred Flame (cantrip)
+
+A creature makes a Dexterity saving throw or takes 1d8 radiant damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@316 = ~Toll the Dead~
+@317 = ~Toll the Dead (cantrip)
+
+A creature makes a Wisdom saving throw or takes 1d8 necrotic damage, 1d12 if it is missing hit points (more dice at character levels 5, 11 and 17). Usable at will.~
+@318 = ~Word of Radiance~
+@319 = ~Word of Radiance (cantrip)
+
+Enemies next to you make a Constitution saving throw or take 1d6 radiant damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@320 = ~Produce Flame~
+@321 = ~Produce Flame (cantrip)
+
+Make a ranged spell attack: 1d8 fire damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@322 = ~Thorn Whip~
+@323 = ~Thorn Whip (cantrip)
+
+Make a melee spell attack at reach: 1d6 piercing damage (more dice at character levels 5, 11 and 17), and a Large or smaller target is pulled up to 10 feet toward you. Usable at will.~
+@324 = ~Starry Wisp~
+@325 = ~Starry Wisp (cantrip)
+
+Make a ranged spell attack: 1d8 radiant damage (more dice at character levels 5, 11 and 17). Usable at will.~
+@326 = ~Vicious Mockery~
+@327 = ~Vicious Mockery (cantrip)
+
+A creature makes a Wisdom saving throw or takes 1d6 psychic damage and has disadvantage on its next attack (more dice at character levels 5, 11 and 17). Usable at will.~
+
+// New 2024 spells.
+@340 = ~Healing Word~
+@341 = ~Healing Word
+
+Level 1, Casting Time: 1 action
+A creature you can see regains 2d4 + your spellcasting ability modifier hit points.~
+@342 = ~Cure Wounds~
+@343 = ~Cure Wounds (Bard)
+
+Level 1, Casting Time: 1 action
+A creature you touch regains 2d8 + your spellcasting ability modifier hit points.~
+@344 = ~Mass Healing Word~
+@345 = ~Mass Healing Word
+
+Level 3, Casting Time: 1 action
+You and your allies nearby regain 2d4 + your spellcasting ability modifier hit points.~
+@346 = ~Guiding Bolt~
+@347 = ~Guiding Bolt
+
+Level 1, Casting Time: 1 action
+Make a ranged spell attack: 4d6 radiant damage, and the next attack against the target before the end of the next round has advantage.~
+@348 = ~Thunderwave~
+@349 = ~Thunderwave
+
+Level 1, Casting Time: 1 action
+Enemies around you make a Constitution saving throw: 2d8 thunder damage and pushed 10 feet away on a failure, half damage on a success.~
+@350 = ~Shatter~
+@351 = ~Shatter
+
+Level 2, Casting Time: 1 action
+The target and enemies near it make a Constitution saving throw: 3d8 thunder damage, half on a success.~
+@352 = ~Misty Step~
+@353 = ~Misty Step
+
+Level 2, Casting Time: 1 action (bonus action in 2024)
+You teleport to a spot you can see nearby.~
+@354 = ~Spirit Guardians~
+@355 = ~Spirit Guardians
+
+Level 3, Casting Time: 1 action
+For one minute, enemies near you make a Wisdom saving throw every round: 3d8 radiant damage, half on a success.~
+@356 = ~Revivify~
+@357 = ~Revivify
+
+Level 3, Casting Time: 1 action
+You touch a creature that has died within the last minute. That creature returns to life with 1 hit point.
+
+It also brings back the protagonist after the third failed death save, before the minute runs out and before anyone strikes the body again.~
+
+// Bard, Cleric, Druid, Sorcerer, Wizard; class feature choices.
+@400 = ~Bardic Inspiration~
+@401 = ~Bardic Inspiration
+
+Bard feature: inspire an ally; it adds your Bardic Inspiration die (d6, d8 at level 5, d10 at 10, d12 at 15) to its next failed saving throw within an hour. Charisma modifier uses per long rest (short rests too from level 5).~
+@402 = ~Divine Spark~
+@403 = ~Divine Spark
+
+Cleric feature (Channel Divinity): an ally regains 1d8 + Wisdom modifier hit points, or an enemy makes a Constitution save and takes that much radiant damage (half on a success). More dice at levels 7, 13 and 18.~
+@404 = ~Turn Undead~
+@405 = ~Turn Undead
+
+Cleric feature (Channel Divinity): undead near you make a Wisdom save or are turned for a minute. From level 5 (Sear Undead) they also take radiant damage.~
+@406 = ~Preserve Life~
+@407 = ~Preserve Life
+
+Life Domain (Channel Divinity): party members near you regain up to 5 x Cleric level hit points in total, but none above half its maximum.~
+@408 = ~Land's Aid~
+@409 = ~Land's Aid
+
+Circle of the Land: enemies around the target make a Constitution save or take 2d6 necrotic damage (half on a success), and the target (if it is an ally) or you regain 2d6 hit points. More dice at levels 10 and 14.~
+@410 = ~Innate Sorcery~
+@411 = ~Innate Sorcery
+
+Sorcerer feature: for one minute your spell save DC rises by 1 and your spell attacks have advantage. Twice per long rest.~
+@412 = ~Choose: Class Feature~
+@413 = ~Class Feature
+
+Choose an option of a class feature (for example Divine Order or Primal Order).~
+@414 = ~Choose: Cantrip~
+@415 = ~Cantrip
+
+Choose a cantrip. Cantrips are innate abilities you can use at will.~
+@416 = ~Choose: Spellbook Spell~
+@417 = ~Spellbook
+
+Add a wizard spell to your spellbook. A wizard's spellbook holds at least six spells at level 1 and two more for every level after that; scrolls you copy count toward it.~
+@900 = ~Psychic Blade~
+@901 = ~A blade of psychic energy, formed by a Soulknife's mind. It vanishes after an hour.
+
+Damage: 1d6 (counts as magical)
+Properties: finesse
+Weight: 0~
+@902 = ~Primal Companion~
+@910 = ~BG 2024: this kit is the %b24_sub% subclass, which it takes at level 3. Its 2e kit abilities make way for the 2024 class and subclass features; its item and spell restrictions stay.~
+@911 = ~BG 2024: this kit's 2e kit abilities make way for the 2024 class features; the kit is flavour, and you choose a subclass at level 3. Its item and spell restrictions stay.~
+@920 = ~Battle Medic~
+@921 = ~Battle Medic
+
+Healer feat: you tend a creature's wounds. It spends one of its Hit Point Dice and regains the roll plus your Proficiency Bonus in hit points (a 1 is rolled again).
+
+Once per short rest.~
+
+// Catalog spells with new 2024 mechanics (b24_spells.tpa)
+@744 = ~Disintegrate
+
+Level 6 Transmutation, Casting Time: 1 action
+Range: 120 feet
+Saving Throw: Dexterity (negates)
+
+A thin green ray springs from your finger at a creature you can see. The target makes a Dexterity saving throw; on a failure it takes 10d6 + 40 force damage (in BG: magic damage). A creature this damage reduces to 0 hit points dies.
+
+Upcasting: +3d6 damage for each spell slot level above 6.~
+@745 = ~Inflict Wounds
+
+Level 1 Necromancy, Casting Time: 1 action
+Range: Touch
+Saving Throw: Constitution (half)
+
+A creature you touch makes a Constitution saving throw. It takes 2d10 necrotic damage on a failed save (in BG: magic damage), or half as much on a successful one.
+
+Upcasting: +1d10 damage for each spell slot level above 1.~
+@746 = ~Magic Missile
+
+Level 1 Evocation, Casting Time: 1 action
+Range: 120 feet
+
+You create three glowing darts of magical force. Each dart strikes a creature you can see and deals 1d4 + 1 force damage (in BG: magic damage). The darts always hit. In BG the first dart strikes the target of the spell; for a round the others are innate abilities (Magic Missile: Dart) aimed one by one, and the ones not aimed strike the first target.
+
+Upcasting: one more dart for each spell slot level above 1.~
+@747 = ~Chromatic Orb
+
+Level 1 Evocation, Casting Time: 1 action
+Range: 90 feet
+
+You hurl an orb of energy at a creature. Make a ranged spell attack; on a hit, the target takes 3d8 damage of the kind you choose: acid, cold, fire, lightning or poison (in BG: the kind the target resists least).
+
+Upcasting: +1d8 damage for each spell slot level above 1.~
+@748 = ~Scorching Ray
+
+Level 2 Evocation, Casting Time: 1 action
+Range: 120 feet
+
+You hurl three fiery rays at one or more creatures. Make a ranged spell attack for each ray; on a hit, the ray deals 2d6 fire damage. In BG the first ray goes to the target of the spell; for a round the others are innate abilities (Scorching Ray: Ray) aimed one by one, and the ones not aimed go to the first target.
+
+Upcasting: one more ray for each spell slot level above 2.~
+@749 = ~Acid Arrow
+
+Level 2 Evocation, Casting Time: 1 action
+Range: 90 feet
+
+A shimmering green arrow streaks toward a creature. Make a ranged spell attack. On a hit, the target takes 4d4 acid damage and 2d4 acid damage a round later. On a miss, it takes half the initial damage only.
+
+Upcasting: the damage (both the initial and the later damage) increases by 1d4 for each spell slot level above 2.~
+@750 = ~Shield of Faith
+
+Level 1 Abjuration, Casting Time: 1 bonus action
+Range: 60 feet
+Duration: Concentration, up to 10 minutes
+
+A shimmering field surrounds a creature of your choice, granting it a +2 bonus to Armor Class for the duration.~
+@751 = ~Harm
+
+Level 6 Necromancy, Casting Time: 1 action
+Range: 60 feet
+Saving Throw: Constitution (half)
+
+You unleash virulent magic on a creature you can see. The target makes a Constitution saving throw. It takes 14d6 necrotic damage on a failed save (in BG: magic damage), or half as much on a successful one.~
+@752 = ~Flame Strike
+
+Level 5 Evocation, Casting Time: 1 action
+Range: 60 feet
+Saving Throw: Dexterity (half)
+
+A vertical column of divine fire roars down from the heavens. Each creature in the column makes a Dexterity saving throw. It takes 5d6 fire damage and 5d6 radiant damage (in BG: magic damage) on a failed save, or half as much on a successful one.
+
+Upcasting: the fire damage and the radiant damage increase by 1d6 each for each spell slot level above 5.~
+@753 = ~Color Spray
+
+Level 1 Illusion, Casting Time: 1 action
+Range: Self (15-foot cone)
+Saving Throw: Constitution (negates)
+
+You launch a dazzling array of flashing, colored light. Each creature in the cone must succeed on a Constitution saving throw or be blinded until the end of your next turn.~
+@754 = ~Flesh to Stone
+
+Level 6 Transmutation, Casting Time: 1 action
+Range: 60 feet
+Duration: Concentration, up to 1 minute
+Saving Throw: Constitution
+
+You attempt to turn one creature that you can see within range into stone. The target must make a Constitution saving throw. On a failed save, it is restrained and begins to harden. It repeats the saving throw at the end of each of its turns (every round outside turn-based combat): after three failed saves it is petrified, after three successful saves the spell ends.
+
+Petrified is the game's stone state: Greater Restoration or Stone to Flesh ends it. A petrified protagonist ends the game.~
+@755 = ~Haste
+
+Level 3 Transmutation, Casting Time: 1 action
+Range: 30 feet
+Duration: Concentration, up to 1 minute
+
+Choose a willing creature that you can see within range. Until the spell ends, the target's speed is doubled, it gains a +2 bonus to Armor Class, it has advantage on Dexterity saving throws, and it makes an additional attack each round.
+
+When the spell ends, the target is stunned until the end of its next turn, as a wave of lethargy sweeps over it.~
+@756 = ~Vampiric Touch
+
+Level 3 Necromancy, Casting Time: 1 action
+Range: Touch
+Duration: Concentration, up to 1 minute
+
+The touch of your shadow-wreathed hand can siphon life force from others. Make a melee spell attack against a creature within reach. On a hit, the target takes 3d6 necrotic damage, and you regain hit points equal to half the necrotic damage dealt. Until the spell ends, you can make the attack again on each of your turns (in BG: the innate Vampiric Touch (again), once per round).
+
+Using a Higher-Level Spell Slot: The damage increases by 1d6 for each spell slot level above 3.~
+@757 = ~Aid
+
+Level 2 Abjuration, Casting Time: 1 action
+Range: 30 feet
+Duration: 8 hours
+
+Your spell bolsters your allies with toughness and resolve. The target and up to two more party members near it each gain 5 to their hit point maximum and current hit points for the duration.
+
+Using a Higher-Level Spell Slot: the hit points increase by 5 more for each spell slot level above 2.~
+@758 = ~Bane
+
+Level 1 Enchantment, Casting Time: 1 action
+Range: 30 feet
+Duration: Concentration, up to 1 minute
+Saving Throw: Charisma
+
+One creature you can see within range must make a Charisma saving throw. Whenever a target that fails this save makes an attack roll or a saving throw before the spell ends, it takes a -2 penalty (the game's stand-in for subtracting 1d4).~
+@759 = ~Death Ward
+
+Level 4 Abjuration, Casting Time: 1 action
+Range: Touch
+Duration: 8 hours
+
+You touch a creature and grant it a measure of protection from death. The first time the target would drop to 0 hit points before the spell ends, the target instead drops to 1 hit point, and the spell ends. While the spell lasts, the target is also immune to magic that would kill it instantly.~
+@760 = ~Ice Storm
+
+Level 4 Evocation, Casting Time: 1 action
+Range: 300 feet
+Saving Throw: Dexterity (half)
+
+Hail falls in a cylinder. Each creature in it makes a Dexterity saving throw. A creature takes 2d10 bludgeoning damage and 4d6 cold damage on a failed save or half as much damage on a successful one.~
+@761 = ~Stoneskin
+
+Level 4 Transmutation, Casting Time: 1 action
+Range: Touch
+Duration: Concentration, up to 1 hour
+
+Until the spell ends, one willing creature you touch has resistance to bludgeoning, piercing, and slashing damage (in the game also to missile damage). Unlike the 2024 spell, the game cannot tell magical from nonmagical weapons: the resistance applies to all of them.~
+@762 = ~Cloudkill
+
+Level 5 Conjuration, Casting Time: 1 action
+Range: 120 feet
+Duration: Concentration, up to 10 minutes
+Saving Throw: Constitution (half)
+
+You create a sphere of yellow-green fog. Each creature in the cloud makes a Constitution saving throw, taking 5d8 poison damage on a failed save or half as much damage on a successful one, every round it stays inside.
+
+Using a Higher-Level Spell Slot: The damage increases by 1d8 for each spell slot level above 5.~
+@763 = ~Incendiary Cloud
+
+Level 8 Conjuration, Casting Time: 1 action
+Range: 150 feet
+Duration: Concentration, up to 1 minute
+Saving Throw: Dexterity (half)
+
+A swirling cloud of embers fills the area. Each creature in it makes a Dexterity saving throw, taking 10d8 fire damage on a failed save or half as much damage on a successful one.~
+@764 = ~Meteor Swarm
+
+Level 9 Evocation, Casting Time: 1 action
+Range: 1 mile
+Saving Throw: Dexterity (half)
+
+Blazing orbs of fire plummet to the ground. Each creature in the area makes a Dexterity saving throw. A creature takes 20d6 fire damage and 20d6 bludgeoning damage on a failed save or half as much damage on a successful one. A creature in the area of more than one meteor is affected only once.~
+@765 = ~Power Word Kill
+
+Level 9 Enchantment, Casting Time: 1 action
+Range: 60 feet
+
+You compel one creature you can see within range to die. If the target has 100 hit points or fewer, it dies. Otherwise, it takes 12d12 psychic damage.~
+@766 = ~Power Word Stun
+
+Level 8 Enchantment, Casting Time: 1 action
+Range: 60 feet
+
+You overwhelm the mind of one creature you can see within range. If the target has 150 hit points or fewer, it has the Stunned condition. Otherwise, its speed is 0 until the start of your next turn.
+
+The stunned target makes a Constitution saving throw at the end of each of its turns (every round outside turn-based combat), ending the condition on a success.~
+@767 = ~Protection from Energy
+
+Level 3 Abjuration, Casting Time: 1 action
+Range: Touch
+Duration: Concentration, up to 1 hour
+
+For the duration, the willing creature you touch has resistance to fire and cold damage. (The 2024 spell protects against one damage type of your choice; in the game each version of the spell covers its own energies.)~
+// Portrait icons of the mod's states (STATDESC.2DA, shown when the mouse is over the icon).
+@950 = ~Concentrating~
+@951 = ~Raging~
+@952 = ~Reckless Attack~
+@953 = ~Exhaustion~
+@954 = ~Prone~
+@955 = ~Grappled~
+@956 = ~Restrained~
+@957 = ~Hunter's Mark~
+@958 = ~Bardic Inspiration~
+@959 = ~Divine Smite ready~
+@960 = ~Sacred Weapon~
+@961 = ~Holy Nimbus~
+@962 = ~Dodging~
+@963 = ~Starry Form~
+@964 = ~Innate Sorcery~
+@965 = ~Temporary Hit Points~
+@969 = ~Portent~
+// Escape Grapple
+@970 = ~Escape Grapple~
+@971 = ~Escape Grapple
+
+Use your action to break free of a grapple: a Strength (Athletics) or Dexterity (Acrobatics) check, whichever is better, against the grapple's escape DC (8 + the grappler's Strength modifier and proficiency bonus). Raging gives advantage on the Athletics check. The ability is available only while you are grappled.~
+// Dying rules: portrait icons
+@972 = ~Dying~
+@973 = ~Stable~
+// Turn-based combat
+@974 = ~Turn-Based Combat~
+@975 = ~Turn-Based Combat
+
+Switches turn-based combat on or off for this game (it starts off).
+
+When it is on, every creature in a fight rolls initiative (d20 + Dexterity modifier) and acts in that order, one at a time, while everyone else waits. On a party member's turn the game waits for your order; the character is selected for you. A turn ends when the action is done: an attack round, a spell, a move. Use End Turn to pass. Conversations and story scenes still run in real time.
+
+When it is off, combat runs in real time with a pause at the start of every round.~
+@976 = ~End Turn~
+@977 = ~End Turn
+
+Ends this character's turn in turn-based combat.~
+@978 = ~Your turn~
+// Dying rules: overhead text
+@979 = ~Dying~
+@980 = ~Death save failed (1/3)~
+@981 = ~Death save failed (2/3)~
+@983 = ~Death save succeeded (1/3)~
+@984 = ~Death save succeeded (2/3)~
+@985 = ~Stable~
+@986 = ~Wakes up~
+@987 = ~One minute left: Revivify or healing, and no more hits~
+@988 = ~Dies~
+@989 = ~Opportunity Attack~
+@992 = ~Beast Form~
+@768 = ~Magic Missile: Dart~
+@769 = ~Magic Missile: Dart
+
+A dart of your Magic Missile, aimed at any creature you can see: 1d4 + 1 force damage (in BG: magic damage), always hits. Costs no action; the darts not aimed by the end of the round strike the spell's first target.~
+@770 = ~Scorching Ray: Ray~
+@771 = ~Scorching Ray: Ray
+
+A ray of your Scorching Ray, aimed at any creature you can see: a ranged spell attack, 2d6 fire damage on a hit. Costs no action; the rays not aimed by the end of the round go to the spell's first target.~
+@772 = ~Enlarge~
+@773 = ~Enlarge
+
+Level 2 Transmutation, Casting Time: 1 action
+Range: 30 feet
+Duration: Concentration, up to 1 minute
+
+A creature you can see grows one size larger. It has advantage on Strength saving throws, and its weapon attacks deal an extra 1d4 damage. An unwilling creature makes a Constitution saving throw to resist. In BG the creature's looks don't change; its size counts for pushes and other size limits. (2024: Enlarge/Reduce; BG has one spell for each choice.)~
+@774 = ~Reduce~
+@775 = ~Reduce
+
+Level 2 Transmutation, Casting Time: 1 action
+Range: 30 feet
+Duration: Concentration, up to 1 minute
+
+A creature you can see shrinks one size smaller. It has disadvantage on Strength saving throws, and its weapon attacks deal 1d4 less damage (at least 1). An unwilling creature makes a Constitution saving throw to resist. In BG the creature's looks don't change; its size counts for pushes and other size limits. (2024: Enlarge/Reduce; BG has one spell for each choice.)~
+@776 = ~Travel Along the Tree~
+@777 = ~Travel Along the Tree
+
+Path of the World Tree (level 14), while raging, once per round: you teleport up to 60 feet to a point you can see. (2024: also once per rage up to 150 feet with up to six willing creatures, which has no BG form.)~
+@778 = ~Recovery Dice~
+@779 = ~Recovery Dice
+
+Boon of Recovery: you regain 1d10 hit points. 10 uses per long rest.~
+@780 = ~Spell Recall~
+@781 = ~Spell Recall
+
+Boon of Spell Recall, once per long rest: a spent spell slot of level 1 to 4 (the highest) comes back.~
+@782 = ~Merge with Shadows~
+@783 = ~Merge with Shadows
+
+Boon of the Night Spirit, once per round: you turn invisible until you attack or cast a spell (a minute at most).~
+@784 = ~Dimensional Travel~
+@785 = ~Dimensional Travel
+
+Boon of Dimensional Travel, once per round: you teleport up to 30 feet to a point you can see.~
+@786 = ~Cure Light Wounds (Bhaalspawn power)
+
+Once per day, a creature you touch regains 2d8 hit points plus your spellcasting ability modifier (2024: Cure Wounds; your best of Intelligence, Wisdom and Charisma if you cast no spells).~
+@787 = ~Vampiric Touch (Bhaalspawn power)
+
+Once per day, make a melee spell attack against a creature you touch: 3d6 necrotic damage (in BG: magic damage) on a hit, and you regain hit points equal to half the damage dealt (2024: Vampiric Touch, cast at once).~
+@788 = ~Greater Restoration
+
+Level 5 Abjuration, Casting Time: 1 action
+Range: Touch
+
+You touch a creature and magically remove harmful effects: petrification (also while turning to stone), curses, charm, fear, confusion, feeblemindedness and other mind-altering magic, poison, disease, blindness and deafness, lost levels (level drain) and lowered abilities. In BG it removes all of these at once (2024: one of them). It restores no hit points (BG's version healed fully).~
+@789 = ~Vampiric Touch (again)~
+@790 = ~Vampiric Touch (again)
+
+While you concentrate on Vampiric Touch, once per round: make the touch again, a melee spell attack with the spell's damage (3d6, more from a higher slot); you regain half the damage dealt. It costs no spell slot.~
+// Subclass innates (generated by tools/gen_innates.pl)
+@2000 = ~Choose: Class Feature Option~
+@2001 = ~Opens the choice of a class feature you have earned but not chosen yet (maneuvers, spells known).~
+@2002 = ~Trip Attack~
+@2003 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or falls prone.~
+@2004 = ~Pushing Attack~
+@2005 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or is pushed 15 feet away.~
+@2006 = ~Menacing Attack~
+@2007 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Wisdom save or is frightened until the end of your next round.~
+@2008 = ~Disarming Attack~
+@2009 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Strength save or fumbles its weapon (its attacks have disadvantage until the end of the next round).~
+@2010 = ~Distracting Strike~
+@2011 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the next attack against the target by someone else this round has advantage.~
+@2012 = ~Goading Attack~
+@2013 = ~Battle Master maneuver (one Superiority Die): your next hit this round deals the die as extra damage, and the target makes a Wisdom save or has disadvantage on attacks against anyone but you until the end of your next round.~
+@2014 = ~Feinting Attack~
+@2015 = ~Battle Master maneuver (one Superiority Die): your next attack this round has advantage, and a hit deals the die as extra damage.~
+@2016 = ~Precision Attack~
+@2017 = ~Battle Master maneuver (one Superiority Die): roll the die and add it to your attack rolls for the rest of this round.~
+@2018 = ~Lunging Attack~
+@2019 = ~Battle Master maneuver (one Superiority Die): you move faster this round, and your next hit deals the die as extra damage.~
+@2020 = ~Sweeping Attack~
+@2021 = ~Battle Master maneuver (one Superiority Die): when your next melee attack this round hits, another enemy next to the target takes the die as damage.~
+@2022 = ~Parry~
+@2023 = ~Battle Master maneuver (one Superiority Die): the next melee hit against you this round deals the die plus your Strength or Dexterity modifier less damage.~
+@2024 = ~Rally~
+@2025 = ~Battle Master maneuver (one Superiority Die): an ally or you gains temporary hit points equal to the die plus your Charisma modifier.~
+@2026 = ~Evasive Footwork~
+@2027 = ~Battle Master maneuver (one Superiority Die): add the die to your Armor Class for the rest of this round.~
+@2028 = ~Commander's Strike~
+@2029 = ~Battle Master maneuver (one Superiority Die): an ally makes one extra attack this round, and its next hit deals the die as extra damage.~
+@2030 = ~Psionic Strike~
+@2031 = ~Psi Warrior (one Psionic Energy Die): your next weapon hit this round deals the die plus your Intelligence modifier in force damage.~
+@2032 = ~Guarded Mind~
+@2033 = ~Psi Warrior (one Psionic Energy Die): you shake off fear.~
+@2034 = ~Bulwark of Force~
+@2035 = ~Psi Warrior: you and up to your Intelligence modifier allies within 30 feet gain +2 Armor Class for a minute. Once per long rest; later uses cost a Psionic Energy Die.~
+@2036 = ~Branches of the Tree~
+@2037 = ~Path of the World Tree, while raging, once per round: a creature within 30 feet makes a Strength save or is pulled next to you by the branches of the World Tree and can't move for a round.~
+@2038 = ~Warrior of the Gods~
+@2039 = ~Path of the Zealot: spend one of your d12s and regain that many hit points. The dice return on a long rest.~
+@2040 = ~Zealous Presence~
+@2041 = ~Path of the Zealot: you and your allies within 60 feet have advantage on attacks and saves for a round. Once per long rest.~
+@2042 = ~Beguiling Magic~
+@2043 = ~College of Glamour: a creature within 60 feet makes a Wisdom save against your spell save DC or is frightened for a minute. Once per long rest; later uses spend Bardic Inspiration.~
+@2044 = ~Mantle of Inspiration~
+@2045 = ~College of Glamour (one Bardic Inspiration): up to your Charisma modifier allies within 60 feet gain twice a roll of your Bardic Inspiration die as temporary hit points.~
+@2046 = ~Mantle of Majesty~
+@2047 = ~College of Glamour: for a minute you can command a creature each round (the Command innate). Once per long rest.~
+@2048 = ~Command~
+@2049 = ~Mantle of Majesty, once per round: a creature makes a Wisdom save against your spell save DC or falls prone for a round.~
+@2050 = ~Unbreakable Majesty~
+@2051 = ~College of Glamour: for a minute attacks against you have disadvantage. Once per short rest.~
+@2052 = ~Radiance of the Dawn~
+@2053 = ~Light Domain (Channel Divinity): enemies within 30 feet make a Constitution save or take 2d10 + your Cleric level radiant damage, half on a success.~
+@2054 = ~Warding Flare~
+@2055 = ~Light Domain: for a round, attacks against you or an ally within 30 feet have disadvantage. From level 6 the ally also gains 2d6 + your Wisdom modifier temporary hit points. Wisdom modifier uses per long rest (short rest from level 6).~
+@2056 = ~Corona of Light~
+@2057 = ~Light Domain: for a minute, enemies within 60 feet have disadvantage on saves against your spells and Channel Divinity. Wisdom modifier uses per long rest.~
+@2058 = ~Blessing of the Trickster~
+@2059 = ~Trickery Domain: a creature you touch gets better at moving silently and hiding for an hour (standing in for advantage on Stealth).~
+@2060 = ~Invoke Duplicity~
+@2061 = ~Trickery Domain (Channel Divinity): an illusory double of you flickers next to your foes; for a minute you have advantage on attacks.~
+@2062 = ~Guided Strike~
+@2063 = ~War Domain (Channel Divinity): +10 to your attack rolls this round.~
+@2064 = ~War God's Blessing~
+@2065 = ~War Domain (Channel Divinity): Shield of Faith on a creature within 30 feet, +2 AC for a minute, without concentration.~
+@2066 = ~War Priest~
+@2067 = ~War Domain: one extra attack this round. Wisdom modifier uses per short rest.~
+@2068 = ~Wrath of the Sea~
+@2069 = ~Circle of the Sea (one Wild Shape use): for 10 minutes, each round an enemy next to you makes a Constitution save or takes cold damage (Wisdom modifier d6) and is pushed away.~
+@2070 = ~Starry Form: Archer~
+@2071 = ~Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Archer; each round you can loose a Luminous Arrow.~
+@2072 = ~Starry Form: Chalice~
+@2073 = ~Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Chalice; your healing spells also heal the most hurt ally near you.~
+@2074 = ~Starry Form: Dragon~
+@2075 = ~Circle of the Stars (one Wild Shape use): for 10 minutes you shine with the Dragon; a Constitution save never counts its d20 below 10.~
+@2076 = ~Luminous Arrow~
+@2077 = ~Starry Form (Archer), once per round: a ranged spell attack that deals 1d8 + your Wisdom modifier radiant damage (2d8 from level 10).~
+@2078 = ~Hand of Harm~
+@2079 = ~Warrior of Mercy (one Focus Point): your next unarmed hit this round deals a Martial Arts die + your Wisdom modifier necrotic damage.~
+@2080 = ~Hand of Healing~
+@2081 = ~Warrior of Mercy (one Focus Point): the creature you touch regains a Martial Arts die + your Wisdom modifier hit points.~
+@2082 = ~Shadow Arts~
+@2083 = ~Warrior of Shadow (one Focus Point): shadows hide you; you are invisible for a minute or until you attack.~
+@2084 = ~Cloak of Shadows~
+@2085 = ~Warrior of Shadow (three Focus Points): improved invisibility for a minute.~
+@2086 = ~Shadow Step~
+@2087 = ~Warrior of Shadow, once per round: you slip through the shadows, move fast for a moment and have advantage on your next melee attack.~
+@2088 = ~Elemental Attunement~
+@2089 = ~Warrior of the Elements (one Focus Point): for 10 minutes your unarmed hits deal cold damage and push the target 10 feet (Strength save).~
+@2090 = ~Elemental Burst~
+@2091 = ~Warrior of the Elements (two Focus Points): a creature and those around it make a Dexterity save or take three Martial Arts dice of cold damage, half on a success.~
+@2092 = ~Inspiring Smite~
+@2093 = ~Oath of Glory (Channel Divinity): you and your allies within 30 feet share 2d8 + your Paladin level temporary hit points.~
+@2094 = ~Nature's Wrath~
+@2095 = ~Oath of the Ancients (Channel Divinity): enemies within 15 feet make a Strength save or are restrained by spectral vines for a minute (a new save at the end of each round).~
+@2096 = ~Vow of Enmity~
+@2097 = ~Oath of Vengeance (Channel Divinity): for a minute you have advantage on attacks against the creature.~
+@2098 = ~Living Legend~
+@2099 = ~Oath of Glory: for a minute, once per round you reroll a failed save. Once per long rest.~
+@2100 = ~Elder Champion~
+@2101 = ~Oath of the Ancients: for a minute you regain 10 hit points each round, and enemies in your aura have disadvantage on saves against your spells and Channel Divinity. Once per long rest.~
+@2102 = ~Avenging Angel~
+@2103 = ~Oath of Vengeance: for 10 minutes, enemies that come within 30 feet make a Wisdom save or are frightened for a minute; attacks against them have advantage. Once per long rest.~
+@2104 = ~Primal Companion~
+@2105 = ~Beast Master: summon your beast of the land, a wolf whose strength grows with your Ranger level. Once per long rest.~
+@2106 = ~Psychic Blades~
+@2107 = ~Soulknife: a blade of psychic energy forms in your hand for an hour (1d6, finesse, magical).~
+@2108 = ~Psychic Veil~
+@2109 = ~Soulknife: you are invisible for an hour or until you attack. Once per long rest; later uses cost a Psionic Energy Die.~
+@2110 = ~Create Spell Slot (1)~
+@2111 = ~Font of Magic (2 Sorcery Points): a spent level 1 spell slot returns.~
+@2112 = ~Create Spell Slot (2)~
+@2113 = ~Font of Magic (3 Sorcery Points): a spent level 2 spell slot returns.~
+@2114 = ~Create Spell Slot (3)~
+@2115 = ~Font of Magic (5 Sorcery Points): a spent level 3 spell slot returns.~
+@2116 = ~Create Spell Slot (4)~
+@2117 = ~Font of Magic (6 Sorcery Points): a spent level 4 spell slot returns.~
+@2118 = ~Create Spell Slot (5)~
+@2119 = ~Font of Magic (7 Sorcery Points): a spent level 5 spell slot returns.~
+@2120 = ~Revelation in Flesh~
+@2121 = ~Aberrant Sorcery (one Sorcery Point): for 10 minutes you see invisible creatures and move faster.~
+@2122 = ~Warping Implosion~
+@2123 = ~Aberrant Sorcery: space folds around you; enemies within 30 feet make a Strength save or take 3d10 force damage, half on a success. Once per long rest, or 5 Sorcery Points.~
+@2124 = ~Restore Balance~
+@2125 = ~Clockwork Sorcery: for a round, attacks against an ally within 30 feet can't have advantage. Proficiency Bonus uses per long rest.~
+@2126 = ~Bastion of Law~
+@2127 = ~Clockwork Sorcery: spend up to 5 Sorcery Points; an ally within 30 feet gains that many d8 temporary hit points.~
+@2128 = ~Trance of Order~
+@2129 = ~Clockwork Sorcery: for a minute, attacks against you can't have advantage and your saves never count their d20 below 10. Once per long rest, or 5 Sorcery Points.~
+@2130 = ~Clockwork Cavalcade~
+@2131 = ~Clockwork Sorcery: allies within 30 feet share up to 100 hit points of healing. Once per long rest, or 7 Sorcery Points.~
+@2132 = ~Tides of Chaos~
+@2133 = ~Wild Magic Sorcery: advantage on your attacks and saves for a round. Once per long rest; a Wild Magic Surge restores it, and your next spell after using it surges.~
+@2134 = ~Portent~
+@2135 = ~Diviner: the creature's next save uses one of your Portent rolls (the lowest for enemies, the highest for allies). The rolls are shown after each long rest.~
+@2136 = ~The Third Eye~
+@2137 = ~Diviner: you see invisible creatures for an hour. Once per short rest.~
+@2138 = ~Speedy Recovery~
+@2139 = ~Durable feat, once per short rest: spend one of your Hit Point Dice and regain its roll plus your Constitution modifier in hit points.~
+@2140 = ~Grapple~
+@2141 = ~Grappler feat, once per round: a creature next to you makes a Strength or Dexterity save or is grappled (it can't move and saves again at the end of each round). You have advantage on attacks against creatures you grapple.~
+@2142 = ~Telekinetic Shove~
+@2143 = ~Telekinetic feat, once per round: a creature within 30 feet makes a Strength save against your spell save DC or is pushed 5 feet.~
+@2144 = ~Careful Spell~
+@2145 = ~Metamagic (1 Sorcery Point): your allies automatically succeed on their saves against your next spell and take no damage from it if they would take half.~
+@2146 = ~Empowered Spell~
+@2147 = ~Metamagic (1 Sorcery Point): when your next spell deals damage, up to your Charisma modifier of its low damage dice are rolled again.~
+@2148 = ~Extended Spell~
+@2149 = ~Metamagic (1 Sorcery Point): your next spell lasts twice as long, and you have advantage on saves to keep concentrating on it.~
+@2150 = ~Heightened Spell~
+@2151 = ~Metamagic (2 Sorcery Points): creatures make their saves against your next spell with disadvantage.~
+@2152 = ~Quickened Spell~
+@2153 = ~Metamagic (2 Sorcery Points): you cast your next spell much faster.~
+@2154 = ~Seeking Spell~
+@2155 = ~Metamagic (1 Sorcery Point): if your next spell's attack roll misses, roll it again.~
+@2156 = ~Transmuted Spell~
+@2157 = ~Metamagic (1 Sorcery Point): acid, cold, fire, lightning or poison damage of your next spell turns into the type the target resists least.~
+@2158 = ~Divine Intervention~
+@2159 = ~Cleric, once per long rest: choose a Cleric spell of level 5 or lower (at level 20 also Wish, where the game has it) and cast it once without a spell slot.~
+@2160 = ~Innate Sorcery (Sorcery Incarnate)~
+@2161 = ~Sorcery Incarnate (2 Sorcery Points, once Innate Sorcery has no uses left): Innate Sorcery for a minute (+1 spell save DC, advantage on spell attacks, two Metamagic options per spell).~
+@2162 = ~Dragon Wings~
+@2163 = ~Draconic Sorcery, once per long rest: for an hour you move faster, and webs, entangling plants and grease can't hold you (BG has no flying).~
+@2164 = ~Overchannel~
+@2165 = ~Evoker: your next wizard spell of level 1 to 5 deals its maximum damage. The first use after a long rest is free; each later one costs you 2d12 necrotic damage per spell level, a d12 more per level each time.~
+@2166 = ~Wild Companion~
+@2167 = ~Druid (one Wild Shape use): a spirit animal (in BG: a wolf) fights at your side for an hour.~
+@2168 = ~Wild Resurgence: Spell Slot to Wild Shape~
+@2169 = ~Druid, once per round when you have no Wild Shape uses left: your lowest ready spell slot turns into one Wild Shape use.~
+@2170 = ~Wild Resurgence: Wild Shape to Spell Slot~
+@2171 = ~Druid, once per long rest: a Wild Shape use brings back one spent 1st-level spell slot.~
+@2172 = ~Nature's Sanctuary~
+@2173 = ~Circle of the Land (one Wild Shape use): for a minute you and the allies near you get +2 Armor Class and your land's Nature's Ward resistance.~
+@2174 = ~Nature Magician~
+@2175 = ~Archdruid, once per long rest: Wild Shape uses bring back a spent spell slot, two spell levels per use.~
+@2176 = ~Wild Shape~
+@2177 = ~Druid (one Wild Shape use): take the shape of a beast for half your Druid level in hours. You gain temporary hit points equal to your Druid level (three times your Druid level in the Circle of the Moon).
+
+Your Strength, Dexterity, Constitution, Armor Class, attacks and attack bonus become the beast's; you keep your hit points, Intelligence, Wisdom, Charisma, class features and feats. You can't cast spells (from Druid level 18 you can), and your equipment merges into the form. The form ends early when you are incapacitated, drop to 0 hit points or use Natural Form.
+
+Forms: Challenge Rating 1/4 from Druid level 2, 1/2 from 4, 1 from 8. The Circle of the Moon reaches Challenge Rating 1 at level 3 and 2 at level 6. BG has no flying forms.~
+@2178 = ~Wild Shape: Natural Form~
+@2179 = ~Leave your Wild Shape form early and return to your own shape.~
+@2180 = ~Wild Shape: Wolf~
+@2181 = ~Beast form, Challenge Rating 1/4 (Druid level 2).
+
+AC 12; Strength 14, Dexterity 15, Constitution 12
+Bite: +4 to hit, 1d6+2 piercing; a Medium or smaller target falls prone
+Pack Tactics: advantage on attacks against a target that an ally stands next to~
+@2182 = ~Wild Shape: Panther~
+@2183 = ~Beast form, Challenge Rating 1/4 (Druid level 2).
+
+AC 13; Strength 14, Dexterity 16, Constitution 10
+Rend: +5 to hit, 1d6+3 slashing~
+@2184 = ~Wild Shape: Giant Wolf Spider~
+@2185 = ~Beast form, Challenge Rating 1/4 (Druid level 2).
+
+AC 13; Strength 12, Dexterity 16, Constitution 13
+Bite: +5 to hit, 1d4+3 piercing plus 2d4 poison~
+@2186 = ~Wild Shape: Boar~
+@2187 = ~Beast form, Challenge Rating 1/4 (Druid level 2).
+
+AC 11; Strength 13, Dexterity 11, Constitution 14
+Gore: +3 to hit, 1d6+1 piercing
+Bloodied Fury: advantage on attacks while at half hit points or less~
+@2188 = ~Wild Shape: Giant Venomous Snake~
+@2189 = ~Beast form, Challenge Rating 1/4 (Druid level 2).
+
+AC 14; Strength 10, Dexterity 18, Constitution 13
+Bite: +6 to hit, 1d4+4 piercing plus 1d8 poison~
+@2190 = ~Wild Shape: Black Bear~
+@2191 = ~Beast form, Challenge Rating 1/2 (Druid level 4).
+
+AC 11; Strength 15, Dexterity 12, Constitution 14
+Two Rends: +4 to hit, 1d6+2 slashing~
+@2192 = ~Wild Shape: Warhorse~
+@2193 = ~Beast form, Challenge Rating 1/2 (Druid level 4).
+
+AC 11; Strength 18, Dexterity 12, Constitution 13
+Hooves: +6 to hit, 2d4+4 bludgeoning~
+@2194 = ~Wild Shape: Brown Bear~
+@2195 = ~Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).
+
+AC 11; Strength 17, Dexterity 12, Constitution 15
+Bite and Claw: +5 to hit, 1d6+3 (bite 1d8+3 piercing, claw 1d4+3 slashing); once a round a Large or smaller target falls prone~
+@2196 = ~Wild Shape: Dire Wolf~
+@2197 = ~Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).
+
+AC 14; Strength 17, Dexterity 15, Constitution 15
+Bite: +5 to hit, 1d10+3 piercing; a Large or smaller target falls prone
+Pack Tactics: advantage on attacks against a target that an ally stands next to~
+@2198 = ~Wild Shape: Giant Spider~
+@2199 = ~Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).
+
+AC 14; Strength 14, Dexterity 16, Constitution 12
+Bite: +5 to hit, 1d8+3 piercing plus 2d6 poison~
+@2200 = ~Wild Shape: Tiger~
+@2201 = ~Beast form, Challenge Rating 1 (Druid level 8, Circle of the Moon 3).
+
+AC 13; Strength 17, Dexterity 16, Constitution 14
+Rend: +5 to hit, 2d6+3 slashing; a Large or smaller target falls prone~
+@2202 = ~Wild Shape: Polar Bear~
+@2203 = ~Beast form, Challenge Rating 2 (Circle of the Moon 6).
+
+AC 12; Strength 20, Dexterity 14, Constitution 16
+Two Rends: +7 to hit, 1d8+5 slashing
+Resistance to cold~
+@2204 = ~Wild Shape: Giant Boar~
+@2205 = ~Beast form, Challenge Rating 2 (Circle of the Moon 6).
+
+AC 13; Strength 17, Dexterity 10, Constitution 16
+Gore: +5 to hit, 2d6+3 piercing
+Bloodied Fury: advantage on attacks while at half hit points or less~
+@2206 = ~Cunning Strike: Poison~
+@2207 = ~Rogue: your next Sneak Attack gives up 1d6; the target makes a Constitution save or is poisoned for a minute.~
+@2208 = ~Cunning Strike: Trip~
+@2209 = ~Rogue: your next Sneak Attack gives up 1d6; the target makes a Dexterity save or falls prone.~
+@2210 = ~Cunning Strike: Withdraw~
+@2211 = ~Rogue: your next Sneak Attack gives up 1d6; you get another round's worth of movement.~
+@2212 = ~Devious Strike: Daze~
+@2213 = ~Rogue: your next Sneak Attack gives up 2d6; the target makes a Constitution save or is slowed for a round (only a move or an action).~
+@2214 = ~Devious Strike: Knock Out~
+@2215 = ~Rogue: your next Sneak Attack gives up 6d6; the target makes a Constitution save or falls unconscious for a minute (damage wakes it).~
+@2216 = ~Devious Strike: Obscure~
+@2217 = ~Rogue: your next Sneak Attack gives up 3d6; the target makes a Dexterity save or is blinded until the end of its next turn.~
+@2218 = ~Hand of Ultimate Mercy~
+@2219 = ~Warrior of Mercy, once per long rest (5 Focus): touch a creature that died less than 24 hours ago; it returns to life with 4d10 + your Wisdom modifier hit points.~
+@2220 = ~Tamed Surge~
+@2221 = ~Wild Magic, once per long rest, right after you cast a spell: choose the Wild Magic Surge it sets off.~
+@2222 = ~Phantasmal Creatures~
+@2223 = ~Illusionist, once per long rest: an illusory beast fights at your side for an hour (Summon Beast without a spell slot).~
+// End of subclass innates

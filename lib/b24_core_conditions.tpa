@@ -1,0 +1,63 @@
+// Core rules: 2e penalties that come with a condition (lua/B24COND.lua has the 2024 effects).
+//
+// In every spell and item, an effect group (equipping effects or one ability) that applies
+//   entangle (op154)   loses its AC penalties (restrained gives advantage instead)
+//   panic (op24)       loses its attack and AC penalties (frightened gives disadvantage)
+//   blindness (op74)   loses its attack and AC penalties (the engine's own are undone at run time)
+//   slow (op40)        gets -2 AC instead of a bigger penalty and no attack penalty
+// Penalties are set to 0 rather than deleted, so effect indices stay as they are.
+COPY_EXISTING_REGEXP GLOB ~^.+\.\(spl\|itm\)$~ ~override~
+  SPRINT b24_sig ~~
+  PATCH_IF (SOURCE_SIZE > 0x71) BEGIN
+    READ_ASCII 0x00 b24_sig (4)
+  END
+  PATCH_IF (~%b24_sig%~ STRING_EQUAL ~SPL ~) OR (~%b24_sig%~ STRING_EQUAL ~ITM ~) BEGIN
+    SET b24_hsize = (~%b24_sig%~ STRING_EQUAL ~SPL ~) ? 0x28 : 0x38
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    READ_LONG  0x6a b24_foff
+    // Group -1: equipping effects; 0.. abilities.
+    FOR (g = 0 - 1; g < b24_hnum; ++g) BEGIN
+      PATCH_IF (g < 0) BEGIN
+        READ_SHORT 0x6e b24_fidx
+        READ_SHORT 0x70 b24_fnum
+      END ELSE BEGIN
+        READ_SHORT (b24_hoff + g * b24_hsize + 0x1e) b24_fnum
+        READ_SHORT (b24_hoff + g * b24_hsize + 0x20) b24_fidx
+      END
+      SET b24_entangle = 0 SET b24_panic = 0 SET b24_blind = 0 SET b24_slow = 0
+      FOR (k = 0; k < b24_fnum; ++k) BEGIN
+        SET b24_off = b24_foff + (b24_fidx + k) * 0x30
+        PATCH_IF (b24_off + 0x30 <= BUFFER_LENGTH) BEGIN
+          READ_SHORT b24_off b24_op
+          PATCH_IF (b24_op == 154) BEGIN SET b24_entangle = 1 END
+          PATCH_IF (b24_op == 24)  BEGIN SET b24_panic = 1 END
+          PATCH_IF (b24_op == 74)  BEGIN SET b24_blind = 1 END
+          PATCH_IF (b24_op == 40)  BEGIN SET b24_slow = 1 END
+        END
+      END
+      PATCH_IF (b24_entangle OR b24_panic OR b24_blind OR b24_slow) BEGIN
+        FOR (k = 0; k < b24_fnum; ++k) BEGIN
+          SET b24_off = b24_foff + (b24_fidx + k) * 0x30
+          PATCH_IF (b24_off + 0x30 <= BUFFER_LENGTH) BEGIN
+            READ_SHORT b24_off b24_op
+            READ_SLONG (b24_off + 4) b24_p1
+            READ_LONG  (b24_off + 8) b24_p2
+            PATCH_IF (b24_p1 < 0) BEGIN
+              PATCH_IF ((b24_op == 0) AND (b24_p2 == 0)) BEGIN
+                PATCH_IF b24_slow BEGIN
+                  WRITE_LONG (b24_off + 4) (0 - 2)
+                END ELSE BEGIN
+                  WRITE_LONG (b24_off + 4) 0
+                END
+              END
+              PATCH_IF (((b24_op == 54) OR (b24_op == 278)) AND (b24_panic OR b24_blind OR b24_slow)) BEGIN
+                WRITE_LONG (b24_off + 4) 0
+              END
+            END
+          END
+        END
+      END
+    END
+  END
+  BUT_ONLY

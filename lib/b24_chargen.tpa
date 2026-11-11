@@ -1,0 +1,558 @@
+// Character creation: 2024 ability scores and backgrounds (see lua/B24CHGEN.lua).
+
+// 2024 species and classes have no ability adjustments, limits or minimums.
+COPY_EXISTING ~abracead.2da~ ~override~
+  FOR (c = 1; c <= 6; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = 7 value = 0 END
+  END
+  BUT_ONLY
+
+COPY_EXISTING ~abracerq.2da~ ~override~
+  FOR (c = 1; c <= 11; c += 2) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c       req_cols = 13 value = 3  END
+    LPF b24_set_2da_column INT_VAR column = (c + 1) req_cols = 13 value = 20 END
+  END
+  BUT_ONLY
+
+COPY_EXISTING ~abclasrq.2da~ ~override~
+  FOR (c = 1; c <= 6; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = 7 value = 0 END
+  END
+  BUT_ONLY
+
+// Species descriptions with the 2024 traits.
+COPY_EXISTING ~racetext.2da~ ~override~
+  COUNT_2DA_ROWS 6 b24_rows
+  FOR (r = 0; r < b24_rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 6 b24_race
+    SET b24_desc = 0 - 1
+    PATCH_MATCH ~%b24_race%~ WITH
+      HUMAN    BEGIN SET b24_desc = RESOLVE_STR_REF (@200) END
+      ELF      BEGIN SET b24_desc = RESOLVE_STR_REF (@201) END
+      HALF_ELF BEGIN SET b24_desc = RESOLVE_STR_REF (@202) END
+      DWARF    BEGIN SET b24_desc = RESOLVE_STR_REF (@203) END
+      HALFLING BEGIN SET b24_desc = RESOLVE_STR_REF (@204) END
+      GNOME    BEGIN SET b24_desc = RESOLVE_STR_REF (@205) END
+      HALF_ORC BEGIN SET b24_desc = RESOLVE_STR_REF (@206) END
+      DEFAULT
+    END
+    PATCH_IF (b24_desc >= 0) BEGIN
+      SET_2DA_ENTRY r 3 6 b24_desc
+    END
+  END
+  BUT_ONLY
+
+// Finds a menu block in UI.MENU: from its name line to the next top-level menu or Lua chunk.
+DEFINE_PATCH_FUNCTION b24_menu_block
+  STR_VAR name = ~~
+  RET start end
+BEGIN
+  SET start = INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~name '%name%'~)
+  PATCH_IF (start < 0) BEGIN
+    PATCH_FAIL ~UI.MENU has no %name% menu; a UI mod may have replaced it.~
+  END
+  SET end = INDEX_BUFFER (CASE_SENSITIVE EVALUATE_REGEXP ~^\(menu\|`\)~ start)
+  PATCH_IF (end < 0) BEGIN
+    SET end = BUFFER_LENGTH
+  END
+END
+
+DEFINE_PATCH_MACRO b24_menu_write_back
+BEGIN
+  DELETE_BYTES b24_start (b24_end - b24_start)
+  INSERT_BYTES b24_start (STRING_LENGTH ~%b24_block%~)
+  WRITE_ASCIIE b24_start ~%b24_block%~
+END
+
+// Only the two menus below are patched; other chargen menus use the same Done action. Both keep
+// each game's layout, with values, buttons and actions redirected to Lua (lua/B24CHGEN.lua).
+COPY_EXISTING ~ui.menu~ ~override~
+  // Ability screen.
+  LPF b24_menu_block STR_VAR name = ~CHARGEN_ABILITIES~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    REPLACE_TEXTUALLY EXACT_MATCH ~onopen "ticksPassed = 0; ticksStarting = 0"~
+                                  ~onopen "ticksPassed = 0; ticksStarting = 0; B24CG_Open()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "ABILITIES_TITLE"~ ~text lua "B24CG_Title()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~chargen.ability[rowNumber].roll~ ~B24CG_RowText(rowNumber)~
+    REPLACE_TEXTUALLY EXACT_MATCH ~createCharScreen:OnAbilityPlusMinusButtonClick(~ ~B24CG_PlusMinus(~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "TOTAL_ROLL_NORMAL"~ ~text lua "B24CG_TotalLabel()"~
+    // BG2:EE: widen the total label to the left so it can list the values still to distribute.
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 152 568 186 54~ ~area 32 568 306 54~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "chargen.totalRoll"~ ~text lua "B24CG_TotalValue()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "chargen.extraAbilityPoints"~ ~text lua "B24CG_ExtraValue()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "abilityOrGeneralHelp()"~ ~text lua "B24CG_Help()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnAbilityReRollButtonClick()"~
+                                  ~clickable lua "B24CG_CanReroll()"
+		action "B24CG_Reroll()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "STORE_BUTTON"~ ~text lua "B24CG_MethodLabel()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnAbilityStoreButtonClick()"~ ~action "B24CG_NextMethod()"~
+    // Recall has nothing to recall (the background is its own step on the main screen): its slot,
+    // painted into BG2's window, becomes Reset.
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "RECALL_BUTTON"~ ~text lua "B24CG_Text('RESET')"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~clickable lua "createCharScreen:IsAbilityRecallButtonClickable()"~ ~clickable lua "B24CG_CanReset()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnAbilityRecallButtonClick()"~ ~action "B24CG_Reset()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnCheatyMcCheaterson()"~ ~action "B24CG_Noop()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~clickable lua "createCharScreen:IsDoneButtonClickable()"~ ~clickable lua "B24CG_DoneClickable()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "Infinity_PopMenu(); createCharScreen:OnDoneButtonClick()"~
+                                  ~action "B24CG_Done(); Infinity_PopMenu(); createCharScreen:OnDoneButtonClick()"~
+  END
+  // Every engine call of the ability step must be gone, or the screen would mix both systems.
+  PATCH_FOR_EACH b24_old IN ~OnAbilityPlusMinusButtonClick~ ~OnAbilityReRollButtonClick~ ~OnAbilityStoreButtonClick~
+                            ~OnAbilityRecallButtonClick~ ~OnCheatyMcCheaterson~ ~chargen.totalRoll~
+                            ~IsDoneButtonClickable~ ~abilityOrGeneralHelp~ BEGIN
+    PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~%b24_old%~ ~%b24_block%~) >= 0) BEGIN
+      PATCH_FAIL ~Patching CHARGEN_ABILITIES in UI.MENU failed at "%b24_old%"; a UI mod may have changed this menu.~
+    END
+  END
+  PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~B24CG_Done()~ ~%b24_block%~) < 0) BEGIN
+    PATCH_FAIL ~Patching CHARGEN_ABILITIES in UI.MENU failed at the Done button; a UI mod may have changed this menu.~
+  END
+  LPM b24_menu_write_back
+
+  // Main screen: a Background step between Alignment and Abilities. The rows from Abilities down
+  // move one row (30 px) lower; Abilities unlocks once the background is confirmed.
+  LPF b24_menu_block STR_VAR name = ~CHARGEN~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    SET b24_row = 0
+    REPLACE_EVALUATE CASE_SENSITIVE ~area \([0-9]+\) \([0-9]+\) 340 30~ BEGIN
+      SET b24_row += 1
+      SET b24_y = MATCH2
+      PATCH_IF (b24_row = 4) BEGIN
+        SET b24_bg_x = MATCH1
+        SET b24_bg_y = MATCH2 + 30
+      END
+      PATCH_IF (b24_row >= 5) BEGIN
+        SET b24_y = MATCH2 + 30
+      END
+    END ~area %MATCH1% %b24_y% 340 30~
+    PATCH_IF (b24_row != 8) BEGIN
+      PATCH_FAIL ~The CHARGEN menu in UI.MENU has %b24_row% step buttons instead of 8; a UI mod may have changed it.~
+    END
+    SET b24_bam_at = INDEX_BUFFER (CASE_SENSITIVE EVALUATE_REGEXP ~bam \([A-Z0-9]+\)~)
+    READ_ASCII (b24_bam_at + 4) b24_bam (8) NULL
+    INNER_PATCH_SAVE b24_bam ~%b24_bam%~ BEGIN REPLACE_TEXTUALLY ~[^A-Z0-9].*~ ~~ END
+    REPLACE_TEXTUALLY EXACT_MATCH ~clickable lua "createCharScreen:GetCurrentStep() == 8"~
+                                  ~clickable lua "createCharScreen:GetCurrentStep() == 8 and B24CG_BackgroundDone()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~glow lua "createCharScreen:GetCurrentStep() == 8"~
+                                  ~glow lua "createCharScreen:GetCurrentStep() == 8 and B24CG_BackgroundDone()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "chargen.information"~ ~text lua "B24CG_Information()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "RACE_BUTTON"~ ~text lua "B24CG_Text('SPECIES_BUTTON')"~
+    // BG:EE pads its step buttons; the new button copies that.
+    TEXT_SPRINT b24_pad ~~
+    PATCH_IF (INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~pad 8 2 8 2~) >= 0) BEGIN
+      TEXT_SPRINT b24_pad ~
+		pad 8 2 8 2~
+    END
+    PATCH_IF (INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~B24CG_Information()~) < 0) BEGIN
+      PATCH_FAIL ~Patching CHARGEN in UI.MENU failed at the character summary; a UI mod may have changed this menu.~
+    END
+    // The new button goes last, after the background mosaic, so it is drawn on top.
+    SET b24_last = 0 - 1
+    SET b24_p = INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~}~)
+    WHILE (b24_p >= 0) BEGIN
+      SET b24_last = b24_p
+      SET b24_p = INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~}~ (b24_p + 1))
+    END
+    TEXT_SPRINT b24_button ~	button
+	{
+		area %b24_bg_x% %b24_bg_y% 340 30
+		bam %b24_bam%
+		sequence 2
+		clickable lua "createCharScreen:GetCurrentStep() == 8 and not B24CG_BackgroundDone()"
+		glow lua "createCharScreen:GetCurrentStep() == 8 and not B24CG_BackgroundDone()"
+		text lua "B24CG_Text('BG_BUTTON')"
+		text style "button"%b24_pad%
+		action "B24CG_OpenBackground()"
+	}
+~
+    INSERT_BYTES b24_last (STRING_LENGTH ~%b24_button%~)
+    WRITE_ASCIIE b24_last ~%b24_button%~
+  END
+  LPM b24_menu_write_back
+
+  // Species step: the list shows the ten 2024 species (B24SPEC.SPECIES); picking one selects its
+  // body race in the engine. Done also needs a lineage where the species has them. The help text
+  // is replaced in Lua.
+  LPF b24_menu_block STR_VAR name = ~CHARGEN_RACE~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "RACE_TITLE"~ ~text lua "B24CG_Text('SPECIES_TITLE')"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~Infinity_FetchString(chargen.races[rowNumber].name)~ ~B24CG_SpeciesName(rowNumber)~
+    REPLACE_TEXTUALLY EXACT_MATCH ~if chargen.races[currentChargenRace] then~ ~if B24SPEC.SPECIES[currentChargenRace] then~
+    REPLACE_TEXTUALLY EXACT_MATCH ~createCharScreen:OnRaceSelectButtonClick(chargen.races[currentChargenRace].id)~
+                                  ~B24CG_SpeciesSelect(currentChargenRace)~
+    REPLACE_TEXTUALLY EXACT_MATCH ~table "chargen.races"~ ~table "B24SPEC.SPECIES"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~clickable lua "createCharScreen:IsDoneButtonClickable()"~
+                                  ~clickable lua "createCharScreen:IsDoneButtonClickable() and B24CG_SpeciesReady()"~
+  END
+  PATCH_FOR_EACH b24_old IN ~chargen.races~ ~OnRaceSelectButtonClick~ BEGIN
+    PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~%b24_old%~ ~%b24_block%~) >= 0) BEGIN
+      PATCH_FAIL ~Patching CHARGEN_RACE in UI.MENU failed at "%b24_old%"; a UI mod may have changed this menu.~
+    END
+  END
+  LPM b24_menu_write_back
+
+  // Class step: the 2024 classes under their 2024 names (B24CG.CLASS_ROWS, rebuilt when the screen
+  // opens; while dual-classing it holds the engine's own list).
+  LPF b24_menu_block STR_VAR name = ~CHARGEN_CLASS~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    REPLACE_TEXTUALLY EXACT_MATCH ~onopen "currentChargenClass = nil"~ ~onopen "currentChargenClass = nil; B24CG_ClassOpen()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~Infinity_FetchString(chargen.class[rowNumber].name)~ ~B24CG_ClassName(rowNumber)~
+    REPLACE_TEXTUALLY EXACT_MATCH ~if chargen.class[currentChargenClass] then~ ~if B24CG.CLASS_ROWS[currentChargenClass] then~
+    REPLACE_TEXTUALLY EXACT_MATCH ~createCharScreen:OnClassSelectButtonClick(chargen.class[currentChargenClass].id)~
+                                  ~B24CG_ClassSelect(currentChargenClass)~
+    REPLACE_TEXTUALLY EXACT_MATCH ~table "chargen.class"~ ~table "B24CG.CLASS_ROWS"~
+  END
+  PATCH_FOR_EACH b24_old IN ~chargen.class~ ~OnClassSelectButtonClick~ BEGIN
+    PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~%b24_old%~ ~%b24_block%~) >= 0) BEGIN
+      PATCH_FAIL ~Patching CHARGEN_CLASS in UI.MENU failed at "%b24_old%"; a UI mod may have changed this menu.~
+    END
+  END
+  LPM b24_menu_write_back
+
+  // Kit step: subclasses are chosen at level 3 in 2024. The screen selects the base class, hides
+  // the kit list and explains why; Done continues as before.
+  LPF b24_menu_block STR_VAR name = ~CHARGEN_KIT~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    REPLACE_TEXTUALLY EXACT_MATCH ~ignoreesc~ ~ignoreesc
+	onopen "B24CG_KitOpen()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "CLASS_KIT_TITLE"~ ~text lua "B24CG_Text('SUBCLASS_TITLE')"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~table "chargen.kit"~ ~table "chargen.kit"
+		enabled "false"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "kitOrGeneralHelp()"~ ~text lua "B24CG_KitHelp()"~
+  END
+  PATCH_FOR_EACH b24_new IN ~B24CG_KitOpen~ ~SUBCLASS_TITLE~ ~enabled "false"~ ~B24CG_KitHelp~ BEGIN
+    PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~%b24_new%~ ~%b24_block%~) < 0) BEGIN
+      PATCH_FAIL ~Patching CHARGEN_KIT in UI.MENU failed at "%b24_new%"; a UI mod may have changed this menu.~
+    END
+  END
+  LPM b24_menu_write_back
+
+  // Proficiency step: in character creation the engine's weapon slot and thief skill lists are
+  // hidden and replaced, in the same places, by the current 2024 choice step (left) and a summary
+  // of all proficiencies (right); Done and Back move between the steps. On level-up the lists show
+  // what the new levels give and which choices follow in game (B24LEVEL.lua).
+  LPF b24_menu_block STR_VAR name = ~CHARGEN_PROFICIENCIES~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    // The original lists' row heights: the screen's background art has a row for each.
+    SET b24_lrow = 36
+    SET b24_rrow = 30
+    REPLACE_EVALUATE CASE_SENSITIVE ~rowheight \([0-9]+\)\([^}]*\)table "chargen.\(proficiency\|thief_skill\)"~ BEGIN
+      PATCH_IF (~%MATCH3%~ STRING_EQUAL ~proficiency~) BEGIN SET b24_lrow = MATCH1 END ELSE BEGIN SET b24_rrow = MATCH1 END
+    END ~%MATCH0%~
+    // The background art frames the engine's columns: the name column of the weapon list (BG:EE
+    // 64%, BG2 62%) and the name and value columns of the thief skill list (60% + 10%) end at the
+    // art's dividers. The new lists use the same widths.
+    SET b24_lpct = 64
+    SET b24_rpct = 70
+    REPLACE_EVALUATE CASE_SENSITIVE ~width \([0-9]+\)\([^}]*\)Infinity_FetchString(chargen[.]proficiency[[]rowNumber][.]name)~ BEGIN
+      SET b24_lpct = MATCH1
+    END ~%MATCH0%~
+    REPLACE_EVALUATE CASE_SENSITIVE ~width \([0-9]+\)\([^}]*\)Infinity_FetchString(chargen[.]thief_skill[[]rowNumber][.]name)\([^}]*}[^}]*}[ %TAB%%WNL%%LNL%]*column[ %TAB%%WNL%%LNL%]*{[ %TAB%%WNL%%LNL%]*\)width \([0-9]+\)~ BEGIN
+      SET b24_rpct = MATCH1 + MATCH4
+    END ~%MATCH0%~
+    SET b24_lx = 0 - 1
+    SET b24_rx = 0 - 1
+    REPLACE_EVALUATE CASE_SENSITIVE ~area \([0-9]+\) \([0-9]+\) \([0-9]+\) \([0-9]+\)\([ %TAB%%WNL%%LNL%]+\)table "chargen.\(proficiency\|thief_skill\)"~ BEGIN
+      PATCH_IF (~%MATCH6%~ STRING_EQUAL ~proficiency~) BEGIN
+        SET b24_lx = MATCH1 SET b24_ly = MATCH2 SET b24_lw = MATCH3 SET b24_lh = MATCH4
+      END ELSE BEGIN
+        SET b24_rx = MATCH1 SET b24_ry = MATCH2 SET b24_rw = MATCH3 SET b24_rh = MATCH4
+      END
+    END ~area %MATCH1% %MATCH2% %MATCH3% %MATCH4%%MATCH5%table "chargen.%MATCH6%"
+		enabled "false"~
+    PATCH_IF ((b24_lx < 0) OR (b24_rx < 0)) BEGIN
+      PATCH_FAIL ~The CHARGEN_PROFICIENCIES menu in UI.MENU has an unexpected layout; a UI mod may have changed it.~
+    END
+    REPLACE_TEXTUALLY EXACT_MATCH ~onopen "currentChargenProficiency = nil; currentChargenThiefSkill = nil; ticksPassed = 0; ticksStarting = 0"~
+                                  ~onopen "currentChargenProficiency = nil; currentChargenThiefSkill = nil; ticksPassed = 0; ticksStarting = 0; B24CG_ProfOpen()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "PROF_SLOTS_LABEL"~ ~text lua "B24CG_ProfLeftLabel()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "chargen.extraProficiencySlots"~ ~text lua "B24CG_ProfLeftValue()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "SKILLS_LABEL"~ ~text lua "B24CG_ProfRightLabel()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text lua "chargen.extraSkillPoints"~ ~text lua "B24CG_ProfRightValue()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~clickable lua "createCharScreen:IsDoneButtonClickable()"~ ~clickable lua "B24CG_ProfDoneClickable()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnDoneButtonClick();"~
+                                  ~action "if B24CG_ProfDone() then createCharScreen:OnDoneButtonClick() end"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~text "DONE_BUTTON"~ ~text lua "B24CG_ProfDoneText()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~action "createCharScreen:OnCancelButtonClick();"~
+                                  ~action "if not B24CG_ProfBack() then createCharScreen:OnCancelButtonClick() end"~
+    PATCH_FOR_EACH b24_new IN ~B24CG_ProfOpen~ ~B24CG_ProfLeftValue~ ~B24CG_ProfRightValue~ ~B24CG_ProfDoneClickable~
+                              ~B24CG_ProfDone()~ ~B24CG_ProfDoneText~ ~B24CG_ProfBack~ BEGIN
+      PATCH_IF (INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~%b24_new%~) < 0) BEGIN
+        PATCH_FAIL ~Patching CHARGEN_PROFICIENCIES in UI.MENU failed at "%b24_new%"; a UI mod may have changed this menu.~
+      END
+    END
+    // The new lists have a scrollbar (about 24 wide), and columns share the width left of it: the
+    // percentages grow so the columns still end at the art's dividers.
+    SET b24_lpct = (b24_lpct * b24_lw + (b24_lw - 24) / 2) / (b24_lw - 24)
+    SET b24_rpct = (b24_rpct * b24_rw + (b24_rw - 24) / 2) / (b24_rw - 24)
+    SET b24_spct = 100 - b24_lpct
+    SET b24_npct = 100 - b24_rpct
+    SET b24_lname = (b24_lw - 24) * b24_lpct / 100
+    SET b24_lstate = (b24_lw - 24) * b24_spct / 100
+    SET b24_rtext = (b24_rw - 24) * b24_rpct / 100
+    SET b24_rnote = (b24_rw - 24) * b24_npct / 100
+    TEXT_SPRINT b24_lists ~	list
+	{
+		column
+		{
+			width %b24_lpct%
+			label
+			{
+				area 0 0 %b24_lname% %b24_lrow%
+				text lua "B24CG_ProfRowName(rowNumber)"
+				text style "normal"
+				text align left center
+				pad 8 0 0 0
+			}
+		}
+		column
+		{
+			width %b24_spct%
+			label
+			{
+				area 0 0 %b24_lstate% %b24_lrow%
+				text lua "B24CG_ProfRowState(rowNumber)"
+				text style "normal"
+				text align center center
+			}
+		}
+		action "B24CG_ProfRowClick(b24cgSkillRow)"
+		rowheight %b24_lrow%
+		area %b24_lx% %b24_ly% %b24_lw% %b24_lh%
+		table "B24CG.PROF_ROWS"
+		var b24cgSkillRow
+		scrollbar 'GUISCRC'
+	}
+	list
+	{
+		column
+		{
+			width %b24_rpct%
+			label
+			{
+				area 0 0 %b24_rtext% %b24_rrow%
+				text lua "B24CG_SummaryText(rowNumber)"
+				text style "normal"
+				text align left center
+				pad 8 0 0 0
+			}
+		}
+		column
+		{
+			width %b24_npct%
+			label
+			{
+				area 0 0 %b24_rnote% %b24_rrow%
+				text lua "B24CG_SummaryNote(rowNumber)"
+				text style "normal"
+				text align center center
+			}
+		}
+		rowheight %b24_rrow%
+		area %b24_rx% %b24_ry% %b24_rw% %b24_rh%
+		table "B24CG.PROF_SUMMARY"
+		var b24cgSummaryRow
+		scrollbar 'GUISCRC'
+		hidehighlight
+	}
+~
+    SET b24_last = 0 - 1
+    SET b24_p = INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~}~)
+    WHILE (b24_p >= 0) BEGIN
+      SET b24_last = b24_p
+      SET b24_p = INDEX_BUFFER (CASE_SENSITIVE EXACT_MATCH ~}~ (b24_p + 1))
+    END
+    INSERT_BYTES b24_last (STRING_LENGTH ~%b24_lists%~)
+    WRITE_ASCIIE b24_last ~%b24_lists%~
+  END
+  LPM b24_menu_write_back
+  BUT_ONLY
+
+// Appearance screen: a species may start with its own skin color (B24CG_DefaultSkin, the Goliath
+// on the half-orc body), set at the end of onOpen, after the screen has read the colors.
+COPY_EXISTING ~ui.menu~ ~override~
+  LPF b24_menu_block STR_VAR name = ~CHARACTER_COLOR~ RET b24_start = start b24_end = end END
+  READ_ASCII b24_start b24_block (b24_end - b24_start)
+  INNER_PATCH_SAVE b24_block ~%b24_block%~ BEGIN
+    REPLACE_TEXTUALLY ~SLIDER_color_minor_start = SLIDER_color_minor\([^"]*\)"\([^"]*\)onClose~
+                      ~SLIDER_color_minor_start = SLIDER_color_minor B24CG_DefaultSkin()\1"\2onClose~
+  END
+  PATCH_IF (INDEX (CASE_SENSITIVE EXACT_MATCH ~B24CG_DefaultSkin()~ ~%b24_block%~) < 0) BEGIN
+    PATCH_PRINT ~BG2024 warning: CHARACTER_COLOR in UI.MENU has an unexpected layout; species skin colors are not set.~
+  END
+  LPM b24_menu_write_back
+  BUT_ONLY
+
+// 2024 species have no racial thief skill bonuses (halflings get theirs from Naturally Stealthy).
+COPY_EXISTING ~skillrac.2da~ ~override~
+  FOR (c = 1; c <= 7; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = 8 value = 0 END
+  END
+  BUT_ONLY
+
+// Orc Adrenaline Rush: calls B24ADREN() in B24SPEC.lua.
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@102)
+          description = RESOLVE_STR_REF (@103)
+          opcode = 402
+  STR_VAR resref = ~B24ADREN~
+          icon = ~SPWI305B~
+          effect_res = ~B24ADREN~
+END
+
+COPY ~bg2024/lua/M_B24CG.lua~   ~override~
+     ~bg2024/lua/B24CHGEN.lua~  ~override~
+     ~bg2024/lua/B24CHGEN.menu~ ~override~
+// BG2:EE has no BG1 character creation window: the background and lineage popups take BG2's
+// high-level ability window (GUIHSBS), "Character Generation" on top, the popup's title in the
+// header box, the list on the left panel; the background's details, bonus and feat buttons are
+// stacked on the narrower right panel.
+ACTION_IF NOT FILE_EXISTS_IN_GAME ~guicgwde.mos~ AND FILE_EXISTS_IN_GAME ~guihsbs.mos~ BEGIN
+  COPY_EXISTING ~B24CHGEN.menu~ ~override~
+    REPLACE_TEXTUALLY EXACT_MATCH ~mosaic GUICGWDE~ ~mosaic GUIHSBS~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 60 37 744 44
+		text lua "B24CG_Text('BG_TITLE')"~ ~area 74 10 716 52
+		text "CHARGEN_TITLE"
+		text style "title"
+	}
+	label
+	{
+		area 36 114 448 52
+		text lua "B24CG_Text('BG_TITLE')"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 60 37 744 44
+		text lua "B24CG_LineageTitle()"~ ~area 74 10 716 52
+		text "CHARGEN_TITLE"
+		text style "title"
+	}
+	label
+	{
+		area 36 114 448 52
+		text lua "B24CG_LineageTitle()"~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 0 0 340 44~ ~area 0 0 404 44~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 22 100 340 490~ ~area 58 194 404 404~
+    // Background: details, bonus buttons, feat, status (right panel 522,118 302x494).
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 100 456 240~ ~area 522 118 302 200~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 350 230 30~ ~area 522 322 302 26~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 384 230 40~ ~area 558 350 230 40~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 430 230 40~ ~area 558 392 230 40~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 476 230 40~ ~area 558 434 230 40~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 616 350 220 30~ ~area 522 478 302 26~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 606 384 230 40~ ~area 558 506 230 40~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 530 456 60~ ~area 522 550 302 60~
+    // Lineage: details on the right panel.
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 380 100 456 490~ ~area 522 118 302 494~
+    // Buttons in the window's two slots.
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 196 653 230 40~ ~area 210 652 238 44~
+    REPLACE_TEXTUALLY EXACT_MATCH ~area 438 653 230 40~ ~area 452 652 238 44~
+    BUT_ONLY
+END
+LAF b24_menu_for_game STR_VAR file = ~B24CHGEN.menu~ END
+COPY ~bg2024/lua/B24FEAT.lua~   ~override~
+     ~bg2024/lua/B24SPEC.lua~   ~override~
+
+// Magic Initiate: the level 1 spell becomes an innate ability, cast once per long rest (innates
+// refresh on rest). Cleric: Cure Light Wounds for Cure Wounds; Wizard: Magic Missile.
+ACTION_FOR_EACH b24_pair IN ~sppr103:B24MICL~ ~spwi112:B24MIWZ~ ~sppr105:B24MIDR~ BEGIN
+  OUTER_PATCH_SAVE b24_src ~%b24_pair%~ BEGIN REPLACE_TEXTUALLY ~:.*~ ~~ END
+  OUTER_PATCH_SAVE b24_dst ~%b24_pair%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+  COPY_EXISTING ~%b24_src%.spl~ ~override/%b24_dst%.spl~
+    WRITE_SHORT 0x1c 4                     // innate
+    READ_LONG  0x64 b24_ext_off
+    READ_SHORT 0x68 b24_ext_count
+    FOR (h = 0; h < b24_ext_count; ++h) BEGIN
+      WRITE_SHORT (b24_ext_off + h * 0x28 + 0x02) 4   // innate slot
+    END
+END
+
+// Healer feat: Battle Medic, calls B24HEALR() in B24FEAT.lua on the touched creature.
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@920)
+          description = RESOLVE_STR_REF (@921)
+          opcode = 402
+          touch = 1
+  STR_VAR resref = ~B24HEALR~
+          icon = ~SPPR317C~
+          effect_res = ~B24HEALR~
+END
+
+// Aasimar Healing Hands: calls B24HEALH() in B24SPEC.lua on the touched creature.
+LAF b24_create_innate
+  INT_VAR name = RESOLVE_STR_REF (@104)
+          description = RESOLVE_STR_REF (@105)
+          opcode = 402
+          touch = 1
+  STR_VAR resref = ~B24HEALH~
+          icon = ~SPCL815C~
+          effect_res = ~B24HEALH~
+END
+
+// Dragonborn Breath Weapon, one spell per damage type (see B24SPEC.DAMAGE).
+LAF b24_create_breath INT_VAR name = RESOLVE_STR_REF (@106) description = RESOLVE_STR_REF (@110) damage_type = 0x10000
+  STR_VAR resref = ~B24BRACI~ icon = ~SPWI812C~ END
+LAF b24_create_breath INT_VAR name = RESOLVE_STR_REF (@106) description = RESOLVE_STR_REF (@111) damage_type = 0x20000
+  STR_VAR resref = ~B24BRCOL~ icon = ~SPWI503C~ END
+LAF b24_create_breath INT_VAR name = RESOLVE_STR_REF (@106) description = RESOLVE_STR_REF (@112) damage_type = 0x40000
+  STR_VAR resref = ~B24BRELE~ icon = ~SPWI308C~ END
+LAF b24_create_breath INT_VAR name = RESOLVE_STR_REF (@106) description = RESOLVE_STR_REF (@113) damage_type = 0x80000
+  STR_VAR resref = ~B24BRFIR~ icon = ~SPIN160B~ END
+LAF b24_create_breath INT_VAR name = RESOLVE_STR_REF (@106) description = RESOLVE_STR_REF (@114) damage_type = 0x200000
+  STR_VAR resref = ~B24BRPOI~ icon = ~SPWI614C~ END
+
+// Goliath Giant Ancestry. Cloud's Jaunt is Dimension Door as an innate; the others call the
+// B24GL* functions in B24SPEC.lua.
+COPY_EXISTING ~spwi402.spl~ ~override/B24GLCLD.spl~
+  WRITE_LONG  0x08 RESOLVE_STR_REF (@120)
+  WRITE_LONG  0x50 RESOLVE_STR_REF (@121)
+  WRITE_SHORT 0x1c 4
+  WRITE_LONG  0x34 1
+  READ_LONG  0x64 b24_ext_off
+  READ_SHORT 0x68 b24_ext_count
+  FOR (h = 0; h < b24_ext_count; ++h) BEGIN
+    WRITE_SHORT (b24_ext_off + h * 0x28 + 0x02) 4
+    WRITE_SHORT (b24_ext_off + h * 0x28 + 0x10) 1
+  END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@122) description = RESOLVE_STR_REF (@123) opcode = 402
+  STR_VAR resref = ~B24GLFIR~ icon = ~SPWI418C~ effect_res = ~B24GLFIR~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@124) description = RESOLVE_STR_REF (@125) opcode = 402
+  STR_VAR resref = ~B24GLFRO~ icon = ~SPWI404C~ effect_res = ~B24GLFRO~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@126) description = RESOLVE_STR_REF (@127) opcode = 402
+  STR_VAR resref = ~B24GLHIL~ icon = ~SPPR312C~ effect_res = ~B24GLHIL~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@128) description = RESOLVE_STR_REF (@129) opcode = 402
+  STR_VAR resref = ~B24GLSTO~ icon = ~SPPR506C~ effect_res = ~B24GLSTO~ END
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@130) description = RESOLVE_STR_REF (@131) opcode = 402
+  STR_VAR resref = ~B24GLSTM~ icon = ~SPCL721C~ effect_res = ~B24GLSTM~ END
+
+// 2024: every species can take every class.
+COPY_EXISTING ~clsrcreq.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  FOR (c = 1; c < b24_cols; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = b24_cols value = 1 END
+  END
+  BUT_ONLY
+// Alignments: 2024 classes have none, but BG's paladins keep theirs (the story's paladin orders,
+// falling and the Blackguard kit build on them); every other class may take any alignment.
+ACTION_DEFINE_ASSOCIATIVE_ARRAY b24_keep_alignment BEGIN
+  PALADIN => 1  CAVALIER => 1  INQUISITOR => 1  UNDEAD_HUNTER => 1  BLACKGUARD => 1
+END
+COPY_EXISTING ~alignmnt.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  COUNT_2DA_ROWS b24_cols b24_rows
+  FOR (r = 0; r < b24_rows; ++r) BEGIN
+    READ_2DA_ENTRY r 0 b24_cols b24_label
+    TO_UPPER b24_label
+    PATCH_IF NOT VARIABLE_IS_SET $b24_keep_alignment(~%b24_label%~) BEGIN
+      FOR (c = 1; c < b24_cols; ++c) BEGIN
+        SET_2DA_ENTRY r c b24_cols 1
+      END
+    END
+  END
+  BUT_ONLY
+
+// The mod's own icons for the spells and innates made above.
+LAF b24_install_icons END

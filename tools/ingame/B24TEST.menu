@@ -1,0 +1,48 @@
+-- In-game test (tools/ingame-test.ps1): an invisible button over the whole START and LOAD menus.
+-- The test script clicks into the game window; the button's action runs as input handling,
+-- outside menu rendering, where loading a game is safe (and the click hits no real button).
+menu
+{
+	name "B24TEST_Menu"
+	ignoreesc
+
+	template
+	{
+		button
+		{
+			action "B24T.MenuKey()"
+		}
+		name "B24TEST_Key"
+	}
+
+	-- The status line (B24T.StatusText): what the test does right now, at the top of the menus the
+	-- test drives.
+	template
+	{
+		label
+		{
+			text lua "B24T.StatusText()"
+			text style "normal"
+			text align center center
+			fill 0 0 0 190
+		}
+		name "B24TEST_Status"
+	}
+}
+
+-- The status line on the game screen (pushed by the world tick).
+menu
+{
+	name "B24TEST_STATUS"
+	align center top
+	ignoreesc
+
+	label
+	{
+		area 0 0 1024 32
+		text lua "B24T.StatusText()"
+		text style "normal"
+		text align center center
+		fill 0 0 0 190
+	}
+}

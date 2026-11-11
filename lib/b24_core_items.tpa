@@ -1,0 +1,286 @@
+// Core rules: item math.
+//
+// Armor sets base AC to its 2024 value (engine AC = 20 - 2024 AC), shields give +2,
+// enchantments stay as they are up to +5 (story weapons and armor keep their +4 and +5; 2024 stops
+// at +3, a choice for BG), and AC modifiers against single damage types are removed. Medium and
+// heavy armor set a spell state that B24ADV.lua reads to cap the Dex bonus.
+//
+// Needs b24_state_medium and b24_state_heavy.
+
+OUTER_SET b24_max_enchant = 5
+OUTER_SET b24_max_ring_ac = 2
+
+// Story > rules: items in tables/b24itemkeep.2da keep their BG values untouched (a story
+// creature's natural weapons, forged and assembled items).
+COPY - ~bg2024/tables/b24itemkeep.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_keep_rows 3
+  FOR (r = 0; r < b24_keep_rows; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24_keep_rows r 0 b24_keep_res
+    TO_UPPER b24_keep_res
+    SET $b24_item_keep(~%b24_keep_res%~) = 1
+  END
+
+COPY_EXISTING_REGEXP GLOB ~^.+\.itm$~ ~override~
+  SPRINT b24_this_item ~%SOURCE_RES%~
+  TO_UPPER b24_this_item
+  SPRINT sig ~~
+  PATCH_IF (SOURCE_SIZE > 0x71) AND NOT VARIABLE_IS_SET $b24_item_keep(~%b24_this_item%~) BEGIN
+    READ_ASCII 0x00 sig (8)
+  END
+  PATCH_IF (~%sig%~ STRING_EQUAL ~ITM V1  ~) BEGIN
+    READ_SHORT 0x1c type
+    READ_BYTE  0x22 anim0
+    READ_BYTE  0x23 anim1
+    READ_LONG  0x1e usability
+
+    // 2024: any class can wield any weapon, without the proficiency bonus if the class isn't
+    // proficient (B24PROF.lua). Class and kit limits are cleared on weapons (proficiency type in
+    // B24WEAP.2DA); alignment and race limits stay, and so do weapons that only one or two classes
+    // can use (artifacts such as holy avengers).
+    READ_BYTE 0x31 prof_type
+    PATCH_IF (((prof_type >= 89) AND (prof_type <= 108)) OR (prof_type == 115)) BEGIN
+      SET class_mask = 0x607fffc0
+      SET usable_classes = 0
+      FOR (bit = 0; bit < 31; ++bit) BEGIN
+        PATCH_IF (((class_mask BAND (1 << bit)) != 0) AND ((usability BAND (1 << bit)) == 0)) BEGIN
+          SET usable_classes += 1
+        END
+      END
+      PATCH_IF (usable_classes > 2) BEGIN
+        SET usability = usability BAND (BNOT class_mask)
+        WRITE_LONG 0x1e usability
+        FOR (k = 0x29; k <= 0x2f; k += 2) BEGIN
+          WRITE_BYTE k 0
+        END
+      END
+    END
+
+    // 2024 weapon dice by BG weapon type (thrown axes count as handaxes) and for ammunition by
+    // item type; the damage bonus is the enchantment (at most +5), mundane weapons have none.
+    // Versatile two-handed damage and heavy crossbows don't exist in BG and are left out.
+    SET dice_n = 0
+    SET dice_s = 0
+    PATCH_MATCH prof_type WITH
+      89 90 94 97 100 BEGIN SET dice_n = 1 SET dice_s = 8 END    // longsword, warhammer, flail/morningstar
+      91 95 98 101 102 BEGIN SET dice_n = 1 SET dice_s = 6 END   // shortsword, scimitar, spear, mace, staff
+      92 BEGIN SET dice_n = 1 SET dice_s = 8 END                 // battleaxe
+      93 BEGIN SET dice_n = 2 SET dice_s = 6 END                 // greatsword
+      96 106 108 115 BEGIN SET dice_n = 1 SET dice_s = 4 END     // dagger, dart, blackjack, club
+      99 BEGIN SET dice_n = 1 SET dice_s = 10 END                // halberd
+      DEFAULT
+    END
+    PATCH_IF (prof_type == 0) BEGIN
+      PATCH_MATCH type WITH
+        5  BEGIN SET dice_n = 1 SET dice_s = 6 END               // arrows (shortbow)
+        14 BEGIN SET dice_n = 1 SET dice_s = 4 END               // sling bullets
+        31 BEGIN SET dice_n = 1 SET dice_s = 8 END               // bolts (light crossbow)
+        DEFAULT
+      END
+    END
+    // A "+6" or more in the name of a weapon, shield or armor becomes "+5", the
+    // most the math gives (name_plus = the original number, 0 if none).
+    SET name_plus = 0
+    TEXT_SPRINT item_name ~~
+    READ_LONG 0x0c name_ref
+    PATCH_IF (name_ref > 0) BEGIN
+      READ_STRREF 0x0c item_name
+      PATCH_IF (~%item_name%~ STRING_MATCHES_REGEXP ~.* [+][4-9]\b.*~ = 0) BEGIN
+        INNER_PATCH ~%item_name%~ BEGIN
+          REPLACE_EVALUATE ~ [+]\([4-9]\)\b~ BEGIN SET name_plus = MATCH1 END ~ +%MATCH1%~
+        END
+      END
+    END
+    READ_LONG 0x60 enchantment
+    SET magic_bonus = (enchantment > b24_max_enchant) ? b24_max_enchant : ((enchantment < 0) ? 0 : enchantment)
+    SET desc_dice_n = 0
+    SET desc_dice_s = 0
+    SET desc_hit = 0 - 1
+
+    // Weapon abilities: to-hit and damage bonuses capped at +5.
+    READ_LONG  0x64 hdr_off
+    READ_SHORT 0x68 hdr_num
+    FOR (h = 0; h < hdr_num; ++h) BEGIN
+      SET off = hdr_off + (h * 0x38)
+      READ_BYTE off attack_type
+      READ_BYTE (off + 0x18) old_dice_n
+      PATCH_IF ((dice_n > 0) AND (old_dice_n > 0) AND ((attack_type == 1) OR (attack_type == 2))) BEGIN
+        SET new_s = ((prof_type == 92) AND (attack_type == 2)) ? 6 : dice_s
+        WRITE_BYTE  (off + 0x18) dice_n
+        WRITE_BYTE  (off + 0x16) new_s
+        WRITE_SHORT (off + 0x1a) magic_bonus
+        PATCH_IF (desc_dice_n == 0) BEGIN
+          SET desc_dice_n = dice_n
+          SET desc_dice_s = new_s
+        END
+      END
+      PATCH_IF ((attack_type == 1) OR (attack_type == 2) OR (attack_type == 4)) BEGIN
+        READ_SSHORT (off + 0x14) hit_bonus
+        PATCH_IF ((hit_bonus > b24_max_enchant) AND (hit_bonus < 100)) BEGIN
+          WRITE_SHORT (off + 0x14) b24_max_enchant
+        END
+        READ_SSHORT (off + 0x1a) damage_bonus
+        PATCH_IF (damage_bonus > b24_max_enchant) BEGIN
+          WRITE_SHORT (off + 0x1a) b24_max_enchant
+        END
+        PATCH_IF ((desc_hit < 0) AND (attack_type != 4)) BEGIN
+          READ_SSHORT (off + 0x14) desc_hit
+        END
+      END
+    END
+
+    // Equipping effects: first "set base AC" and first "AC bonus" op0, and typed AC mods.
+    READ_LONG  0x6a fx_off
+    READ_SHORT 0x6e fx_idx
+    READ_SHORT 0x70 fx_num
+    SET base_off = 0 - 1
+    SET bonus_off = 0 - 1
+    SET typed_ac = 0
+    FOR (k = 0; k < fx_num; ++k) BEGIN
+      SET off = fx_off + ((fx_idx + k) * 0x30)
+      READ_SHORT off opcode
+      PATCH_IF (opcode == 0) BEGIN
+        READ_LONG (off + 8) p2
+        PATCH_IF ((p2 == 16) AND (base_off < 0)) BEGIN
+          SET base_off = off
+        END
+        PATCH_IF ((p2 == 0) AND (bonus_off < 0)) BEGIN
+          SET bonus_off = off
+        END
+        PATCH_IF ((p2 == 1) OR (p2 == 2) OR (p2 == 4) OR (p2 == 8)) BEGIN
+          SET typed_ac = 1
+        END
+      END
+    END
+
+    SET armor_state = 0
+    SET cap = 0
+    SET desc_ac = 0 - 1
+    SET desc_ac_bonus = 0 - 1
+    PATCH_IF ((type == 2) AND (base_off >= 0)) BEGIN
+      // Body armor. v is the 2e base AC including enchantment.
+      READ_SLONG (base_off + 4) v
+      SET ac5 = 0
+      SET cap = 0
+      PATCH_IF (anim1 == 65) BEGIN                      // "?A" armor animations
+        PATCH_IF (anim0 == 50) BEGIN                    // 2A leather family: light
+          SET ac5 = 19 - v                              // leather 8 -> 11, studded 7 -> 12
+          SET cap = 15
+        END ELSE PATCH_IF (anim0 == 51) BEGIN           // 3A chain family
+          PATCH_IF ((usability BAND BIT22) == 0) BEGIN  // thieves can wear it: elven chain, medium
+            SET ac5 = 18 - v                            // elven chain 5 -> 13 (chain shirt)
+            SET cap = 17
+            SET armor_state = b24_state_medium
+          END ELSE BEGIN                                // chain / splint mail: heavy
+            SET ac5 = 21 - v                            // chain 5 -> 16, splint 4 -> 17
+            SET cap = 21
+            SET armor_state = b24_state_heavy
+          END
+        END ELSE PATCH_IF (anim0 == 52) BEGIN           // 4A plate family: heavy
+          SET ac5 = 21 - v                              // plate 3 -> 18
+          // 2024 has one plate armor (AC 18): BG's better full plate (AC 1) counts as plate.
+          PATCH_IF (INDEX (~Full Plate~ ~%item_name%~) >= 0) BEGIN
+            SET ac5 -= 2
+          END
+          SET cap = 21
+          SET armor_state = b24_state_heavy
+        END
+      END ELSE PATCH_IF (anim1 == 87) BEGIN             // "?W" robes
+        SET ac5 = 20 - v                                // robe of the archmagi 5 -> 15
+        SET cap = 15
+      END
+      PATCH_IF (name_plus > b24_max_enchant) BEGIN
+        SET ac5 -= (name_plus - b24_max_enchant)
+      END
+      PATCH_IF (cap > 0) BEGIN
+        SET ac5 = (ac5 < 10) ? 10 : ((ac5 > cap) ? cap : ac5)
+        WRITE_LONG (base_off + 4) (20 - ac5)
+        SET desc_ac = ac5
+      END ELSE BEGIN
+        SET armor_state = 0
+      END
+    END ELSE PATCH_IF ((type == 12) AND (bonus_off >= 0)) BEGIN
+      // Shields: +2 (bucklers +1) plus at most +5 enchantment. BG shields give +1 before magic.
+      READ_SLONG (bonus_off + 4) v
+      SET magic = v - 1
+      SET magic = (magic < 0) ? 0 : ((magic > b24_max_enchant) ? b24_max_enchant : magic)
+      SET buckler = (((anim0 == 68) AND (anim1 == 49)) OR ((anim0 == 67) AND (anim1 == 52))) ? 1 : 0
+      SET desc_ac_bonus = (buckler ? 1 : 2) + magic
+      WRITE_LONG (bonus_off + 4) desc_ac_bonus
+    END ELSE PATCH_IF ((type != 2) AND (type != 12)) BEGIN
+      // Bracers and other set-base items stop at 2024 AC 15; plain AC bonuses at +2.
+      PATCH_IF (base_off >= 0) BEGIN
+        READ_SLONG (base_off + 4) v
+        PATCH_IF (v < 5) BEGIN
+          WRITE_LONG (base_off + 4) 5
+          SET v = 5
+        END
+        SET desc_ac = 20 - v
+      END
+      PATCH_IF (bonus_off >= 0) BEGIN
+        READ_SLONG (bonus_off + 4) v
+        PATCH_IF (v > b24_max_ring_ac) BEGIN
+          WRITE_LONG (bonus_off + 4) b24_max_ring_ac
+          SET v = b24_max_ring_ac
+        END
+        PATCH_IF (base_off < 0) BEGIN SET desc_ac_bonus = v END
+      END
+    END
+
+    PATCH_IF (((type == 2) OR (type == 12)) AND typed_ac) BEGIN
+      FOR (k = 1; k <= 8; k *= 2) BEGIN
+        LPF DELETE_EFFECT INT_VAR check_globals = 1 check_headers = 0 match_opcode = 0 match_parameter2 = k END
+      END
+    END
+
+    PATCH_IF (armor_state > 0) BEGIN
+      LPF ADD_ITEM_EQEFFECT INT_VAR opcode = 328 target = 1 timing = 2 parameter2 = armor_state special = 1 END
+    END
+
+    PATCH_IF ((name_plus > b24_max_enchant) AND ((type == 2) OR (type == 12) OR (prof_type > 0) OR (type == 5) OR (type == 14) OR (type == 31))) BEGIN
+      TEXT_SPRINT old_plus ~ +%name_plus%~
+      TEXT_SPRINT new_name ~%item_name%~
+      INNER_PATCH_SAVE new_name ~%new_name%~ BEGIN REPLACE_TEXTUALLY EXACT_MATCH ~%old_plus%~ ~ +3~ END
+      SAY_EVALUATED 0x0c ~%new_name%~
+      FOR (d = 0x50; d <= 0x54; d += 4) BEGIN
+        READ_LONG d strref
+        PATCH_IF (strref > 0) BEGIN
+          READ_STRREF d desc
+          INNER_PATCH_SAVE new_desc ~%desc%~ BEGIN REPLACE_TEXTUALLY EXACT_MATCH ~%item_name%~ ~%new_name%~ END
+          PATCH_IF NOT (~%new_desc%~ STRING_EQUAL ~%desc%~) BEGIN SAY_EVALUATED d ~%new_desc%~ END
+        END
+      END
+    END
+
+    // Descriptions: the new AC, damage and attack bonus values (dialog.tlk has already been
+    // converted by b24_core_text.tpa, which gives absolute AC values as 20 - BG AC; armor and
+    // other set-base items get their actual 2024 value here).
+    PATCH_IF ((desc_ac >= 0) OR (desc_ac_bonus >= 0) OR (desc_dice_n > 0) OR (desc_hit >= 0)) BEGIN
+      FOR (d = 0x50; d <= 0x54; d += 4) BEGIN
+        READ_LONG d strref
+        PATCH_IF (strref > 0) BEGIN
+          READ_STRREF d desc
+          INNER_PATCH_SAVE desc ~%desc%~ BEGIN
+            PATCH_IF (desc_ac >= 0) BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Armor Class: *[-+]?[0-9]+\( *([^)%LNL%]*)\)?~ ~Armor Class: %desc_ac%~
+            END
+            PATCH_IF (desc_ac_bonus >= 0) BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Armor Class: *[-+]?[0-9]+\( *([^)%LNL%]*)\)?~ ~Armor Class: +%desc_ac_bonus%~
+            END
+            PATCH_IF (desc_dice_n > 0) BEGIN
+              TEXT_SPRINT desc_damage ~%desc_dice_n%d%desc_dice_s%~
+              PATCH_IF (magic_bonus > 0) BEGIN TEXT_SPRINT desc_damage ~%desc_damage%+%magic_bonus%~ END
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Damage: *[0-9]+d[0-9]+\( *[-+] *[0-9]+\)?~ ~Damage: %desc_damage%~
+            END
+            PATCH_IF (desc_hit >= 0) BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Attack bonus: *[-+]?[0-9]+~ ~Attack bonus: +%desc_hit%~
+            END
+          END
+          READ_STRREF d old_desc
+          PATCH_IF NOT (~%desc%~ STRING_EQUAL ~%old_desc%~) BEGIN
+            SAY_EVALUATED d ~%desc%~
+          END
+        END
+      END
+    END
+  END
+BUT_ONLY

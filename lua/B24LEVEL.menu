@@ -1,0 +1,87 @@
+-- BG 2024 Rules Mod: level-up choice popup (subclass, class features, cantrips, Ability Score
+-- Improvement, Fighting Style, Weapon Mastery, Expertise), opened by the choice innates or by
+-- itself after a level-up (see B24LEVEL.lua). Laid out like the game's character creation
+-- windows (GUICGWDE: list on the left, help on the right, two buttons at the bottom).
+
+menu
+{
+	name 'B24_LEVELUP'
+	align center center
+	modal
+	ignoreesc
+
+	label
+	{
+		area 0 0 864 710
+		mosaic GUICGWDE
+	}
+	label
+	{
+		area 60 37 744 44
+		text lua "B24LV_Title()"
+		text style "title"
+	}
+	list
+	{
+		column
+		{
+			width 100
+			label
+			{
+				enabled "not B24LV_HasIcons()"
+				area 0 0 340 44
+				text lua "B24LV_RowName(rowNumber)"
+				text style "list"
+				pad 8 0 0 0
+			}
+			-- Lists with icons (masteries, spells, innates): the icon, then the name.
+			label
+			{
+				enabled "B24LV_RowIcon(rowNumber) ~= ''"
+				area 6 2 40 40
+				bam lua "B24LV_RowIcon(rowNumber)"
+				align center center
+			}
+			label
+			{
+				enabled "B24LV_HasIcons()"
+				area 52 0 288 44
+				text lua "B24LV_RowName(rowNumber)"
+				text style "list"
+				pad 4 0 0 0
+			}
+		}
+		action "B24LV_RowClick(b24lvRow)"
+		rowheight 44
+		area 22 100 340 490
+		table "B24LV.ROWS"
+		var b24lvRow
+		scrollbar 'GUISCRC'
+	}
+	text
+	{
+		area 380 100 456 490
+		text lua "B24LV_Help()"
+		text style "normal"
+		scrollbar 'GUISCRC'
+	}
+	button
+	{
+		on escape
+		area 196 653 230 40
+		bam GUIBUTMT
+		text lua "B24CG_Text and B24CG_Text('CANCEL') or 'Cancel'"
+		text style "button"
+		action "B24LV_Cancel()"
+	}
+	button
+	{
+		on return
+		area 438 653 230 40
+		bam GUIBUTMT
+		text lua "B24CG_Text and B24CG_Text('DONE') or 'Done'"
+		text style "button"
+		clickable lua "B24LV_Ready()"
+		action "B24LV_Done()"
+	}
+}

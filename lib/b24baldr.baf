@@ -1,0 +1,23 @@
+IF
+  PartyRested()
+THEN
+  RESPONSE #100
+    EEex_LuaAction("B24_OnPartyRested()")
+    Continue()
+END
+
+IF
+  EEex_LuaTrigger("return B24_HasPendingScreens()")
+THEN
+  RESPONSE #100
+    EEex_LuaAction("B24_ProcessPendingScreens()")
+    Continue()
+END
+
+IF
+  EEex_LuaTrigger("return B24_PartyNeedsSetup()")
+THEN
+  RESPONSE #100
+    EEex_LuaAction("B24_SetupParty()")
+    Continue()
+END

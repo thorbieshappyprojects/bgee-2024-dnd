@@ -1,0 +1,1176 @@
+// Spells component: 2024 spell slots, the spell catalog (tables/b24spell.2da), upcast versions,
+// cantrips and new 2024 spells (lua/B24SPELL.lua).
+//
+// Catalog actions: SRD (a 2024 spell: level, lists, concentration, save, dice, upcasting, name),
+// KEEP (non-SRD spell with a 2024 counterpart: level only), DROP (BG-only spell: hidden from
+// spell selection and priest lists, scrolls no longer teach it).
+// Priest spells stop at level 7 in the engine: 8th and 9th level priest spells sit at 7, and the
+// 2024 8th/9th slots count as extra 7th level slots (tables/b24_mxsplprs.2da, b24_mxspldru.2da).
+// Paladins and Rangers use the cleric and druid spells (the engine shares the priest lists).
+
+// 2024 spell slots, no bonus slots for high Wisdom, sorcerer spells known = 2024 prepared spells.
+ACTION_FOR_EACH b24_table IN ~mxsplwiz~ ~mxsplsrc~ ~mxsplbrd~ ~mxsplprs~ ~mxspldru~ ~mxsplpal~ ~mxsplran~ ~splsrckn~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_table%.2da~ BEGIN
+    COPY ~bg2024/tables/b24_%b24_table%.2da~ ~override/%b24_table%.2da~
+  END
+END
+// The Dragon Disciple kit (BG2) has its own slot table; as Draconic Sorcery it casts like any
+// sorcerer.
+ACTION_IF FILE_EXISTS_IN_GAME ~mxspldd.2da~ BEGIN
+  COPY ~bg2024/tables/b24_mxsplsrc.2da~ ~override/mxspldd.2da~
+END
+COPY_EXISTING ~mxsplwis.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  FOR (c = 1; c < b24_cols; ++c) BEGIN
+    LPF b24_set_2da_column INT_VAR column = c req_cols = b24_cols value = 0 END
+  END
+  BUT_ONLY
+// No Intelligence caps on the spellbook (2024 has none): BG limits the highest spell level a wizard
+// can learn and the spells known per level by INT (INT 17: level 8 at most, 14 per level; upcast
+// copies count), which the Spellbook choice (B24WIZ.lua) offers up to level 9.
+COPY_EXISTING ~intmod.2da~ ~override~
+  COUNT_2DA_COLS b24_cols
+  LPF b24_set_2da_column INT_VAR column = 2 req_cols = b24_cols value = 9 END
+  LPF b24_set_2da_column INT_VAR column = 3 req_cols = b24_cols value = 99 END
+  BUT_ONLY
+
+// Spells whose 2024 casting time is longer than an action (rituals, minutes, hours).
+ACTION_FOR_EACH b24_res IN ~SPWI110~ ~SPWI123~ ~SPWI301~ ~SPWI617~ ~SPWI804~ ~SPPR304~ ~SPPR504~ ~SPPR712~ BEGIN
+  OUTER_SET $b24_slow_cast(~%b24_res%~) = 1
+END
+
+// Damage and healing in a spell: op12 dice (and flat damage) in every extended header; healing
+// (op17) becomes a Lua heal (B24HEAL in B24SPELL.lua: dice + casting ability modifier).
+DEFINE_PATCH_FUNCTION b24_spell_numbers
+  INT_VAR dice_n = 0 dice_s = 0 flat = 0 heal = 0
+BEGIN
+  READ_LONG  0x64 hdr_off
+  READ_SHORT 0x68 hdr_num
+  READ_LONG  0x6a fx_off
+  FOR (h = 0; h < hdr_num; ++h) BEGIN
+    READ_SHORT (hdr_off + h * 0x28 + 0x1e) fx_num
+    READ_SHORT (hdr_off + h * 0x28 + 0x20) fx_idx
+    FOR (k = 0; k < fx_num; ++k) BEGIN
+      SET f = fx_off + (fx_idx + k) * 0x30
+      READ_SHORT f opcode
+      READ_ASCII (f + 0x14) fx_res (8) NULL
+      PATCH_IF (heal AND (opcode == 402) AND (~%fx_res%~ STRING_EQUAL_CASE ~B24HEAL~)) BEGIN
+        // Upcast copies of a spell already converted below.
+        WRITE_LONG (f + 0x04) dice_n
+        WRITE_LONG (f + 0x08) dice_s
+        WRITE_LONG (f + 0x2c) flat
+      END ELSE PATCH_IF (heal AND (opcode == 17)) BEGIN
+        WRITE_SHORT f 402
+        WRITE_LONG  (f + 0x04) dice_n
+        WRITE_LONG  (f + 0x08) dice_s
+        WRITE_BYTE  (f + 0x0c) 0
+        WRITE_LONG  (f + 0x0e) 0
+        WRITE_ASCII (f + 0x14) ~B24HEAL~ #8
+        WRITE_LONG  (f + 0x1c) 0
+        WRITE_LONG  (f + 0x20) 0
+        WRITE_LONG  (f + 0x2c) flat
+      END ELSE PATCH_IF ((NOT heal) AND (opcode == 402) AND ((~%fx_res%~ STRING_EQUAL_CASE ~B24SATK~)
+          OR (~%fx_res%~ STRING_EQUAL_CASE ~B24RAYS~) OR (~%fx_res%~ STRING_EQUAL_CASE ~B24DART~))) BEGIN
+        // Spell attacks (B24SATK in B24SPELL.lua): parameter 1 dice, parameter 2 die size. Scorching
+        // Ray (B24RAYS): rays, die size, dice per ray. Magic Missile (B24DART): darts, die size,
+        // flat damage per dart.
+        WRITE_LONG (f + 0x04) dice_n
+        WRITE_LONG (f + 0x08) dice_s
+        WRITE_LONG (f + 0x2c) flat
+      END ELSE PATCH_IF ((NOT heal) AND (opcode == 12)) BEGIN
+        WRITE_LONG (f + 0x04) flat
+        WRITE_LONG (f + 0x1c) dice_n
+        WRITE_LONG (f + 0x20) dice_s
+      END
+    END
+  END
+END
+
+// Splits "8d6+40" / "H2d8" / "F70" into dice count, die size, flat amount, healing.
+DEFINE_PATCH_FUNCTION b24_parse_dice
+  STR_VAR text = ~-~
+  RET dice_n dice_s flat heal
+BEGIN
+  SET dice_n = 0 SET dice_s = 0 SET flat = 0 SET heal = 0
+  TEXT_SPRINT rest ~%text%~
+  PATCH_IF (~%rest%~ STRING_MATCHES_REGEXP ~^[HF].*~ = 0) BEGIN
+    SET heal = 1
+    PATCH_IF (~%rest%~ STRING_MATCHES_REGEXP ~^F.*~ = 0) BEGIN
+      INNER_PATCH_SAVE rest ~%rest%~ BEGIN REPLACE_TEXTUALLY ~^F~ ~~ END
+      SET flat = rest
+      TEXT_SPRINT rest ~~
+    END ELSE BEGIN
+      INNER_PATCH_SAVE rest ~%rest%~ BEGIN REPLACE_TEXTUALLY ~^H~ ~~ END
+    END
+  END
+  // An optional "+N" is split off first (an unmatched optional regex group gives no usable MATCH).
+  PATCH_IF (INDEX (~+~ ~%rest%~) >= 0) BEGIN
+    INNER_PATCH_SAVE plus ~%rest%~ BEGIN REPLACE_TEXTUALLY ~^[^+]*[+]~ ~~ END
+    INNER_PATCH_SAVE rest ~%rest%~ BEGIN REPLACE_TEXTUALLY ~[+].*$~ ~~ END
+    SET flat = plus
+  END
+  PATCH_IF (~%rest%~ STRING_MATCHES_REGEXP ~^[0-9]+d[0-9]+$~ = 0) BEGIN
+    INNER_PATCH_SAVE dice_text ~%rest%~ BEGIN REPLACE_TEXTUALLY ~d.*$~ ~~ END
+    SET dice_n = dice_text
+    INNER_PATCH_SAVE dice_text ~%rest%~ BEGIN REPLACE_TEXTUALLY ~^[0-9]+d~ ~~ END
+    SET dice_s = dice_text
+  END
+END
+
+// Priest spells: the cleric/druid lists through the exclusion flags (bit 30: not for clerics and
+// paladins, bit 31: not for druids and rangers).
+DEFINE_PATCH_FUNCTION b24_priest_lists
+  STR_VAR lists = ~~
+BEGIN
+  READ_LONG 0x1e excl
+  SET excl = excl BAND 0x3fffffff
+  SET cleric = (INDEX (~C~ ~%lists%~) >= 0) ? 1 : 0
+  SET druid = (INDEX (~D~ ~%lists%~) >= 0) ? 1 : 0
+  PATCH_IF (cleric AND NOT druid) BEGIN SET excl = excl BOR 0x80000000 END
+  PATCH_IF (druid AND NOT cleric) BEGIN SET excl = excl BOR 0x40000000 END
+  WRITE_LONG 0x1e excl
+END
+
+// Arcane upcast versions and their base spell, read by B24SPELL.lua (filled below).
+COPY ~bg2024/tables/b24upcst.2da~ ~override~
+
+// 2e buffs with 2024 numbers (before the catalog loop, so upcast versions inherit them).
+// Bless: +1d4 to attack rolls and saves (in BG +2 to both).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr101.spl~ BEGIN
+  COPY_EXISTING ~sppr101.spl~ ~override~
+    LPF ALTER_EFFECT INT_VAR match_opcode = 130 parameter1 = 2 END
+    LPF CLONE_EFFECT INT_VAR match_opcode = 130 opcode = 325 parameter1 = 2 parameter2 = 0 END
+    BUT_ONLY
+END
+// Dispel Magic (2024): one creature instead of BG's area; BG's dispel (op58, a caster level roll)
+// and its haste/slow/icon cures give way to B24DISPL in B24SPELL.lua, which ends the target's
+// spells up to the slot level and checks against higher ones. Its effect lands on the caster, so
+// BG's spell protections on the target don't stop it. The message, the visual and the end of
+// magically summoned creatures stay. Upcast versions (catalog 1d1) inherit this.
+ACTION_FOR_EACH b24_res IN ~spwi302~ ~sppr303~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_res%.spl~ BEGIN
+    COPY_EXISTING ~%b24_res%.spl~ ~override~
+      LPF ALTER_SPELL_HEADER INT_VAR target = 1 target_count = 0 projectile = 1 END
+      LPF DELETE_EFFECT INT_VAR match_opcode = 58 END
+      LPF DELETE_EFFECT INT_VAR match_opcode = 81 END
+      LPF DELETE_EFFECT INT_VAR match_opcode = 77 END
+      LPF DELETE_EFFECT INT_VAR match_opcode = 240 END
+      LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 1 timing = 1 duration = 0 probability1 = 100 STR_VAR resource = ~B24DISPL~ END
+      BUT_ONLY
+  END
+END
+
+// Mage Armor: base AC 13 + Dexterity (BG 6 = AC 14).
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi102.spl~ BEGIN
+  COPY_EXISTING ~spwi102.spl~ ~override~
+    LPF ALTER_EFFECT INT_VAR match_opcode = 0 match_parameter2 = 16 parameter1 = 7 END
+    BUT_ONLY
+END
+// Barkskin: AC can't be lower than 17 (B24SPELL.lua; the set-base-AC effect stays as a neutral
+// marker, base 10), no save bonuses.
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr202.spl~ BEGIN
+  COPY_EXISTING ~sppr202.spl~ ~override~
+    LPF ALTER_EFFECT INT_VAR match_opcode = 0 match_parameter2 = 16 parameter1 = 10 END
+    FOR (b24_op = 33; b24_op <= 37; ++b24_op) BEGIN
+      LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+    END
+    BUT_ONLY
+END
+// Shield: +5 AC until the start of your next round, with the Magic Missile immunity.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi114.spl~ BEGIN
+  COPY_EXISTING ~spwi114.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 0 match_parameter2 = 2 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 0 match_parameter2 = 16 parameter1 = 5 parameter2 = 0 END
+    LPF ALTER_EFFECT INT_VAR match_timing = 0 duration = 6 END
+    BUT_ONLY
+END
+// Blur: attacks against you have disadvantage (B24SPELL.lua reads the blur effect, op65), no AC
+// or save bonuses.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi201.spl~ BEGIN
+  COPY_EXISTING ~spwi201.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 0 END
+    FOR (b24_op = 33; b24_op <= 37; ++b24_op) BEGIN
+      LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+    END
+    BUT_ONLY
+END
+// Slow: -2 AC instead of -4 AC and -4 to attack rolls (speed and attacks stay halved).
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi312.spl~ BEGIN
+  COPY_EXISTING ~spwi312.spl~ ~override~
+    // ALTER_EFFECT takes negative values as "unchanged": the AC penalty is written directly.
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    READ_LONG  0x6a b24_foff
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      READ_SHORT (b24_hoff + h * 0x28 + 0x1e) b24_fnum
+      READ_SHORT (b24_hoff + h * 0x28 + 0x20) b24_fidx
+      FOR (k = 0; k < b24_fnum; ++k) BEGIN
+        READ_SHORT (b24_foff + (b24_fidx + k) * 0x30) b24_op
+        PATCH_IF (b24_op == 0) BEGIN WRITE_LONG (b24_foff + (b24_fidx + k) * 0x30 + 4) (0 - 2) END
+      END
+    END
+    LPF DELETE_EFFECT INT_VAR match_opcode = 54 END
+    BUT_ONLY
+END
+// Disintegrate: 10d6+40 force damage (BG magic damage), Dexterity save negates, instead of BG's
+// instant death. The death effect becomes the damage effect with the same save flags; the catalog
+// writes the dice.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi616.spl~ BEGIN
+  COPY_EXISTING ~spwi616.spl~ ~override~
+    LPF ALTER_EFFECT INT_VAR match_opcode = 238 opcode = 12 parameter1 = 0 parameter2 = 0x400000 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@744)
+    BUT_ONLY
+END
+// Removes every effect of the spell but its looks and sounds: lighting (op141), colour glow (op61),
+// sound (op174) and visual effect (op215). Everything else goes, also feedback strings (op139).
+DEFINE_PATCH_FUNCTION b24_strip_effects
+  STR_VAR keep = ~ 61 141 174 215 ~
+BEGIN
+  READ_LONG  0x64 b24_hoff
+  READ_SHORT 0x68 b24_hnum
+  READ_LONG  0x6a b24_foff
+  CLEAR_ARRAY b24_strip
+  FOR (h = 0; h < b24_hnum; ++h) BEGIN
+    READ_SHORT (b24_hoff + h * 0x28 + 0x1e) b24_fnum
+    READ_SHORT (b24_hoff + h * 0x28 + 0x20) b24_fidx
+    FOR (k = 0; k < b24_fnum; ++k) BEGIN
+      READ_SHORT (b24_foff + (b24_fidx + k) * 0x30) b24_op
+      PATCH_IF (INDEX (~ %b24_op% ~ ~%keep%~) < 0) BEGIN SET $b24_strip(~%b24_op%~) = 1 END
+    END
+  END
+  PHP_EACH b24_strip AS b24_op => b24_any BEGIN
+    LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+  END
+END
+
+// Inflict Wounds: 2d10 necrotic damage (BG magic damage), Constitution save for half (the catalog
+// writes dice and save), instead of BG's touch charge weapon. The spell targets a creature at
+// touch range (Cure Light Wounds' range).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr414.spl~ BEGIN
+  COPY_EXISTING - ~sppr103.spl~ ~override~
+    READ_LONG 0x64 b24_hoff
+    READ_SHORT (b24_hoff + 0x0e) b24_touch_range
+  COPY_EXISTING ~sppr414.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 111 END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) b24_touch_range
+    END
+    // Save for half: save type spells (1) and special bit 8, as Fireball has it.
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 12 target = 2 timing = 1 probability1 = 100 parameter2 = 0x400000
+      savingthrow = 1 special = 256 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@745)
+    BUT_ONLY
+END
+// Harm: 14d6 necrotic damage (BG magic damage), Constitution save for half, at a creature within
+// 60 feet, instead of BG's touch that leaves 1 hit point.
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr608.spl~ BEGIN
+  COPY_EXISTING ~sppr608.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 111 END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 60
+    END
+    LPF ALTER_EFFECT INT_VAR target = 2 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 12 target = 2 timing = 1 probability1 = 100 parameter2 = 0x400000
+      savingthrow = 1 special = 256 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@751)
+    BUT_ONLY
+END
+// Flame Strike: 5d6 fire and 5d6 radiant damage (BG magic damage), Dexterity save for half; the
+// catalog writes the same dice into both.
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr503.spl~ BEGIN
+  COPY_EXISTING ~sppr503.spl~ ~override~
+    LPF CLONE_EFFECT INT_VAR match_opcode = 12 parameter2 = 0x400000 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@752)
+    BUT_ONLY
+END
+// Magic Missile: three darts of 1d4 + 1 force damage (BG magic damage), one more per spell level
+// above 1 (B24DART in B24SPELL.lua; the catalog writes darts, die and flat damage). The
+// single missile projectile shows the first dart (the others: B24MDART below).
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi112.spl~ BEGIN
+  COPY_EXISTING ~spwi112.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 12 END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x26) 68
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24DART~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@746)
+    BUT_ONLY
+END
+// Chromatic Orb: a ranged spell attack for 3d8 damage of the kind the target resists least
+// (B24SATK), instead of BG's level-based blinding, stunning and slaying.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi118.spl~ BEGIN
+  COPY_EXISTING ~spwi118.spl~ ~override~
+    LPF b24_strip_effects END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24SATK~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@747)
+    BUT_ONLY
+END
+// Scorching Ray: three rays, each a ranged spell attack for 2d6 fire damage, one more ray per
+// spell level above 2 (B24RAYS), instead of BG's one jet of flame; range 120 feet.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi217.spl~ BEGIN
+  COPY_EXISTING ~spwi217.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 12 END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 120
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24RAYS~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@748)
+    BUT_ONLY
+END
+// Acid Arrow: a ranged spell attack, 4d4 acid damage on a hit and 2d4 a round later, half the 4d4 on
+// a miss (B24SATK), instead of BG's damage over rounds by caster level.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi211.spl~ BEGIN
+  COPY_EXISTING ~spwi211.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 12 END
+    LPF DELETE_EFFECT INT_VAR match_opcode = 142 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24SATK~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@749)
+    BUT_ONLY
+END
+// Shield of Faith: +2 AC for 10 minutes (concentration, from the catalog) on a creature within 60
+// feet, instead of BG's Armor of Faith damage resistance on the caster.
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr111.spl~ BEGIN
+  COPY_EXISTING ~sppr111.spl~ ~override~
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 60
+    END
+    LPF ALTER_EFFECT INT_VAR target = 2 END
+    // Resistances (27-31, 84-89), the proficiency bonus (233) and the spell states (328).
+    PATCH_FOR_EACH b24_op IN 27 28 29 30 31 84 85 86 87 88 89 233 328 BEGIN
+      LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 0 target = 2 timing = 0 duration = 600 parameter1 = 2 probability1 = 100 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 142 duration = 600 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 174 match_timing = 4 duration = 600 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@750)
+    BUT_ONLY
+END
+// Sleep and Color Spray: no hit dice limit (BG keeps it in the effects' dice fields). Sleep: the
+// targets fall unconscious for a minute (Wisdom save, from the catalog). Color Spray: blinded for a
+// round instead of asleep (Constitution save).
+ACTION_FOR_EACH b24_res IN ~spwi116~ ~spwi105~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_res%.spl~ BEGIN
+    COPY_EXISTING ~%b24_res%.spl~ ~override~
+      READ_LONG  0x64 b24_hoff
+      READ_SHORT 0x68 b24_hnum
+      READ_LONG  0x6a b24_foff
+      FOR (h = 0; h < b24_hnum; ++h) BEGIN
+        READ_SHORT (b24_hoff + h * 0x28 + 0x1e) b24_fnum
+        READ_SHORT (b24_hoff + h * 0x28 + 0x20) b24_fidx
+        FOR (k = 0; k < b24_fnum; ++k) BEGIN
+          WRITE_LONG (b24_foff + (b24_fidx + k) * 0x30 + 0x1c) 0
+          WRITE_LONG (b24_foff + (b24_fidx + k) * 0x30 + 0x20) 0
+        END
+      END
+      PATCH_IF (~%b24_res%~ STRING_EQUAL_CASE ~spwi116~) BEGIN
+        LPF ALTER_EFFECT INT_VAR match_opcode = 39 duration = 60 END
+      END ELSE BEGIN
+        LPF ALTER_EFFECT INT_VAR match_opcode = 39 opcode = 74 parameter1 = 0 parameter2 = 0 duration = 6 special = 0 END
+        LPF ALTER_EFFECT INT_VAR match_opcode = 7 duration = 6 END
+        WRITE_LONG 0x50 RESOLVE_STR_REF (@753)
+      END
+      BUT_ONLY
+  END
+END
+// Flesh to Stone: restrained first, petrified after three failed saves (B24COND.lua); only the
+// description changes here. Greater Restoration ends petrification (op43, as Stone to Flesh).
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi604.spl~ BEGIN
+  COPY_EXISTING ~spwi604.spl~ ~override~
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@754)
+    BUT_ONLY
+END
+// Greater Restoration ends conditions (2024: one reduction or condition) and no longer heals (BG's
+// full heal, op17, is gone; 2024's Greater Restoration restores no hit points).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr713.spl~ BEGIN
+  COPY_EXISTING ~sppr713.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 43 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 43 target = 2 timing = 1 probability1 = 100 END
+    LPF DELETE_EFFECT INT_VAR match_opcode = 17 END
+    SAY 0x50 @788
+    BUT_ONLY
+END
+// Haste: one creature within 30 feet, for a minute (concentration, from the catalog): +2 AC, BG's
+// haste (double speed, an extra attack), advantage on Dexterity saves (B24SPELL.lua); when it ends
+// the creature is stunned for a round (lethargy: at the minute's end here, earlier when
+// concentration breaks, B24SPELL.lua). Instead of BG's area haste by caster level with fatigue.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi305.spl~ BEGIN
+  COPY_EXISTING ~spwi305.spl~ ~override~
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 30
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x26) 1
+    END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 16 duration = 60 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 142 duration = 60 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 174 match_timing = 4 duration = 60 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 93 opcode = 402 parameter1 = 0 parameter2 = 0 timing = 4 duration = 60
+      STR_VAR resource = ~B24LETHA~ END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 0 target = 2 timing = 0 duration = 60 parameter1 = 2 probability1 = 100 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@755)
+    BUT_ONLY
+END
+// Vampiric Touch: a melee spell attack for 3d6 necrotic damage (BG magic damage), the caster
+// regains half of it (B24SATK), instead of BG's draining touch charge.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi314.spl~ BEGIN
+  COPY_EXISTING - ~sppr103.spl~ ~override~
+    READ_LONG 0x64 b24_hoff
+    READ_SHORT (b24_hoff + 0x0e) b24_touch_range
+  COPY_EXISTING ~spwi314.spl~ ~override~
+    LPF b24_strip_effects END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+      WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) b24_touch_range
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24SATK~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@756)
+    BUT_ONLY
+END
+// Vampiric Touch again: the innate the spell grants while its concentration lasts (B24VTAGN in
+// B24SPELL.lua): the touch once more each round.
+LAF b24_create_innate INT_VAR name = RESOLVE_STR_REF (@789) description = RESOLVE_STR_REF (@790) opcode = 402 touch = 1
+  STR_VAR resref = ~B24VTAGN~ icon = ~SPWI314C~ effect_res = ~B24VTAGN~ END
+// Bhaalspawn powers (the protagonist's innates from the dreams) in 2024 form: Cure Light Wounds
+// heals as Cure Wounds (2d8 + casting ability modifier, B24HEAL) instead of 8; Vampiric Touch is
+// the 2024 spell (melee spell attack, 3d6, the caster regains half; B24SATK knows SPIN106) instead
+// of BG's drain (SPIN106A). Slow Poison, Draw Upon Holy Might, Larloch's Minor Drain and Horror
+// stay as they are (their saves go through the 2024 save rules already).
+ACTION_IF FILE_EXISTS_IN_GAME ~spin101.spl~ BEGIN
+  COPY_EXISTING ~spin101.spl~ ~override~
+    LPF ALTER_EFFECT INT_VAR match_opcode = 17 opcode = 402 parameter1 = 2 parameter2 = 8 STR_VAR resource = ~B24HEAL~ END
+    SAY 0x50 @786
+    BUT_ONLY
+END
+ACTION_IF FILE_EXISTS_IN_GAME ~spin106.spl~ BEGIN
+  COPY_EXISTING ~spin106.spl~ ~override~
+    LPF b24_strip_effects END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100
+      parameter1 = 3 parameter2 = 6 STR_VAR resource = ~B24SATK~ END
+    SAY 0x50 @787
+    BUT_ONLY
+END
+// Aid: +5 maximum and current hit points for 8 hours for the target and up to two more party
+// members near it, +5 per spell level above 2 (B24AID in B24SPELL.lua; the catalog's upcast column
+// only makes the level copies), instead of BG's +1 to attacks and saves and a few hit points by
+// caster level (op129).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr201.spl~ BEGIN
+  COPY_EXISTING ~sppr201.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 129 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24AID~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@757)
+    BUT_ONLY
+END
+// Bane: a Charisma save (from the catalog) against BG's -2 to attacks and saves (the mod's flat
+// stand-in for -1d4, as Bless).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr113.spl~ BEGIN
+  COPY_EXISTING ~sppr113.spl~ ~override~
+    PATCH_FOR_EACH b24_op IN 54 33 34 35 36 37 142 328 BEGIN
+      LPF ALTER_EFFECT INT_VAR match_opcode = b24_op savingthrow = 1 END
+    END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 174 match_timing = 4 savingthrow = 1 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@758)
+    BUT_ONLY
+END
+// Command: no hit dice limit (the fields of BG's sleep), only the creatures that fail the Wisdom
+// save are affected (BG's unsaved sleep for weak creatures goes).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr102.spl~ BEGIN
+  COPY_EXISTING ~sppr102.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 39 match_savingthrow = 0 END
+    LPF DELETE_EFFECT INT_VAR match_opcode = 174 match_savingthrow = 0 match_timing = 4 END
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    READ_LONG  0x6a b24_foff
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      READ_SHORT (b24_hoff + h * 0x28 + 0x1e) b24_fnum
+      READ_SHORT (b24_hoff + h * 0x28 + 0x20) b24_fidx
+      FOR (k = 0; k < b24_fnum; ++k) BEGIN
+        WRITE_LONG (b24_foff + (b24_fidx + k) * 0x30 + 0x1c) 0
+        WRITE_LONG (b24_foff + (b24_fidx + k) * 0x30 + 0x20) 0
+      END
+    END
+    BUT_ONLY
+END
+// Protection from Energy: an hour (concentration) instead of BG's minutes by caster level. It keeps
+// BG's resistance to all four energies (2024: one type of the caster's choice).
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr210.spl~ BEGIN
+  COPY_EXISTING ~sppr210.spl~ ~override~
+    PATCH_FOR_EACH b24_op IN 28 30 84 85 142 328 BEGIN
+      LPF ALTER_EFFECT INT_VAR match_opcode = b24_op duration = 3600 END
+    END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 174 match_timing = 4 duration = 3600 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@767)
+    BUT_ONLY
+END
+// Death Ward: 8 hours; the first drop to 0 hit points leaves the creature at 1 instead and ends the
+// spell (B24DYING.lua); BG's immunity to death magic stays.
+ACTION_IF FILE_EXISTS_IN_GAME ~sppr409.spl~ BEGIN
+  COPY_EXISTING ~sppr409.spl~ ~override~
+    PATCH_FOR_EACH b24_op IN 101 169 142 328 282 BEGIN
+      LPF ALTER_EFFECT INT_VAR match_opcode = b24_op duration = 28800 END
+    END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 174 match_timing = 4 duration = 28800 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@759)
+    BUT_ONLY
+END
+// Ice Storm: 2d10 bludgeoning (BG crushing) and 4d6 cold damage, Dexterity save for half, once
+// per creature (B24AREA in B24SPELL.lua), instead of BG's unsaved 2d8 cold every round for 4 rounds.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi404.spl~ BEGIN
+  COPY_EXISTING ~spwi404.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 12 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24AREA~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@760)
+    BUT_ONLY
+END
+// Stoneskin: resistance to bludgeoning, piercing and slashing damage (and BG's missile damage) for
+// an hour (concentration), on a creature touched, instead of BG's skins that absorb whole hits.
+ACTION_FOR_EACH b24_res IN ~spwi408~ ~sppr506~ BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_res%.spl~ BEGIN
+    COPY_EXISTING - ~sppr103.spl~ ~override~
+      READ_LONG 0x64 b24_hoff
+      READ_SHORT (b24_hoff + 0x0e) b24_touch_range
+    COPY_EXISTING ~%b24_res%.spl~ ~override~
+      LPF DELETE_EFFECT INT_VAR match_opcode = 218 END
+      READ_LONG  0x64 b24_hoff
+      READ_SHORT 0x68 b24_hnum
+      FOR (h = 0; h < b24_hnum; ++h) BEGIN
+        WRITE_BYTE  (b24_hoff + h * 0x28 + 0x0c) 1
+        WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) b24_touch_range
+      END
+      LPF ALTER_EFFECT INT_VAR target = 2 END
+      PATCH_FOR_EACH b24_op IN 86 87 88 89 BEGIN
+        LPF ADD_SPELL_EFFECT INT_VAR opcode = b24_op target = 2 timing = 0 duration = 3600 parameter1 = 50 probability1 = 100 END
+      END
+      WRITE_LONG 0x50 RESOLVE_STR_REF (@761)
+      BUT_ONLY
+  END
+END
+// Cloudkill: 5d8 poison damage each round in the cloud, Constitution save for half (dice and save
+// from the catalog), instead of BG's instant death for weak creatures and 1d10 unsaved.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi502.spl~ BEGIN
+  COPY_EXISTING ~spwi502.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 55 END
+    LPF ALTER_EFFECT INT_VAR match_opcode = 12 savingthrow = 0x1000001 special = 256 END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@762)
+    BUT_ONLY
+END
+// Incendiary Cloud: 10d8 fire damage, Dexterity save for half (dice from the catalog); only the
+// description changes here.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi810.spl~ BEGIN
+  COPY_EXISTING ~spwi810.spl~ ~override~
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@763)
+    BUT_ONLY
+END
+// Meteor Swarm: 20d6 fire and 20d6 bludgeoning damage, Dexterity save for half, once per creature
+// however many meteors reach it (B24AREA in B24SPELL.lua), instead of BG's unsaved 4d10 fire.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi911.spl~ BEGIN
+  COPY_EXISTING ~spwi911.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 12 END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24AREA~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@764)
+    BUT_ONLY
+END
+// Power Word Kill: a creature with 100 hit points or fewer dies, any other takes 12d12 psychic
+// damage (BG magic damage; B24PWK), instead of BG's death below 60 hit points.
+// Power Word Stun: a creature with 150 hit points or fewer is stunned and repeats a Constitution
+// save at the end of each of its turns, any other can't move for a round (B24PWS), instead of BG's
+// stun by hit points without a save.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi912.spl~ BEGIN
+  COPY_EXISTING ~spwi912.spl~ ~override~
+    PATCH_FOR_EACH b24_op IN 209 318 324 BEGIN
+      LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24PWK~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@765)
+    BUT_ONLY
+END
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi715.spl~ BEGIN
+  COPY_EXISTING ~spwi715.spl~ ~override~
+    PATCH_FOR_EACH b24_op IN 210 324 BEGIN
+      LPF DELETE_EFFECT INT_VAR match_opcode = b24_op END
+    END
+    LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24PWS~ END
+    WRITE_LONG 0x50 RESOLVE_STR_REF (@766)
+    BUT_ONLY
+END
+// Tenser's Transformation: advantage on attacks (B24SPELL.lua) instead of BG's +9 attack bonus
+// and +4 AC; the extra hit points and the damage bonus stay.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi603.spl~ BEGIN
+  COPY_EXISTING ~spwi603.spl~ ~override~
+    LPF DELETE_EFFECT INT_VAR match_opcode = 54 END
+    LPF DELETE_EFFECT INT_VAR match_opcode = 0 END
+    BUT_ONLY
+END
+
+// Spell levels by file name. BG files a spell under the level digit of its name (SPWI3xx = level
+// 3) in character creation, level-up picks, the priest spell lists and the spellbook, and only
+// lists priest spells named SPPR<level><nn>. Spells in $b24_relocate (resref => 2024 level) get a
+// copy under such a name (ADD_SPELL takes the first free one and adds a SPELL.IDS entry); the
+// table rows of the old name are copied to the new one. Re-leveled originals are hidden.
+// $b24_moved_to(old) = new; B24MOVED.2DA (written at the end) lets B24SPELL.lua swap them in
+// existing spellbooks, and scrolls teach the new name.
+OUTER_TEXT_SPRINT b24_moved_rows ~~
+DEFINE_ACTION_MACRO b24_relocate_spells BEGIN
+  ACTION_PHP_EACH b24_relocate AS b24_old => b24_lvl BEGIN
+    ACTION_IF (NOT VARIABLE_IS_SET $b24_moved_to(~%b24_old%~)) AND (FILE_EXISTS_IN_GAME ~%b24_old%.spl~) BEGIN
+      COPY_EXISTING ~%b24_old%.spl~ ~override~
+        READ_SHORT 0x1c b24_spl_type
+        WRITE_LONG 0x34 b24_lvl
+        BUT_ONLY
+      OUTER_SET b24_add_type = (b24_spl_type == 2) ? 1 : 2      // ADD_SPELL: 1 priest, 2 wizard
+      OUTER_TEXT_SPRINT b24_ids ~B24_%b24_old%~
+      ADD_SPELL ~override/%b24_old%.spl~ b24_add_type b24_lvl ~%b24_ids%~
+      OUTER_SET b24_code = IDS_OF_SYMBOL (~spell~ ~%b24_ids%~)
+      OUTER_SET b24_nn = b24_code - (b24_code / 100) * 100
+      OUTER_TEXT_SPRINT b24_prefix ~SPWI~
+      ACTION_IF (b24_add_type == 1) BEGIN OUTER_TEXT_SPRINT b24_prefix ~SPPR~ END
+      OUTER_TEXT_SPRINT b24_new ~%b24_prefix%%b24_lvl%%b24_nn%~
+      ACTION_IF (b24_nn < 10) BEGIN OUTER_TEXT_SPRINT b24_new ~%b24_prefix%%b24_lvl%0%b24_nn%~ END
+      OUTER_TEXT_SPRINT $b24_moved_to(~%b24_old%~) ~%b24_new%~
+      OUTER_TEXT_SPRINT b24_moved_rows ~%b24_moved_rows%%b24_old%  %b24_new%%LNL%~
+      // Re-leveled originals (not the 8-letter upcast versions, which no list shows anyway).
+      ACTION_IF (STRING_LENGTH ~%b24_old%~ == 7) AND (~%b24_old%~ STRING_MATCHES_REGEXP ~^SP\(WI\|PR\).*~ = 0) BEGIN
+        APPEND ~hidespl.2da~ ~%b24_old%  1  0  0~
+      END
+      // Concentration, save and upcast rows follow the spell.
+      ACTION_FOR_EACH b24_table IN ~b24conc.2da~ ~b24saves.2da~ BEGIN
+        COPY_EXISTING ~%b24_table%~ ~override~
+          REPLACE_TEXTUALLY ~^%b24_old%\( [^%LNL%%WNL%]*\)~ ~%b24_old%\1%LNL%%b24_new%\1~
+          BUT_ONLY
+      END
+      COPY_EXISTING ~b24upcst.2da~ ~override~
+        REPLACE_TEXTUALLY ~ %b24_old% ~ ~ %b24_new% ~
+        BUT_ONLY
+    END
+  END
+END
+
+ACTION_DEFINE_ASSOCIATIVE_ARRAY b24_ability_name BEGIN
+  STR => Strength  DEX => Dexterity  CON => Constitution  INT => Intelligence  WIS => Wisdom  CHA => Charisma
+END
+
+// Spell ranges (the catalog's RANGE): touch as Cure Wounds has it; the longest 2024 ranges (Meteor
+// Swarm's mile) stop at b24_range_cap.
+COPY_EXISTING ~sppr103.spl~ ~override~
+  READ_LONG  0x64 b24_hoff
+  READ_SHORT (b24_hoff + 0x0e) b24_touch_units
+  BUT_ONLY
+OUTER_SET b24_range_cap = 300
+
+COPY - ~bg2024/tables/b24spell.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_spells 10
+  FOR (r = 0; r < b24_spells; ++r) BEGIN
+  READ_2DA_ENTRY_FORMER b24_spells r 0 b24_res
+  READ_2DA_ENTRY_FORMER b24_spells r 1 b24_action
+  READ_2DA_ENTRY_FORMER b24_spells r 2 b24_level
+  READ_2DA_ENTRY_FORMER b24_spells r 3 b24_lists
+  READ_2DA_ENTRY_FORMER b24_spells r 4 b24_conc
+  READ_2DA_ENTRY_FORMER b24_spells r 5 b24_save
+  READ_2DA_ENTRY_FORMER b24_spells r 6 b24_dice
+  READ_2DA_ENTRY_FORMER b24_spells r 7 b24_upcast
+  READ_2DA_ENTRY_FORMER b24_spells r 8 b24_range
+  READ_2DA_ENTRY_FORMER b24_spells r 9 b24_name
+  TEXT_SPRINT $b24_catalog_action(~%b24_res%~) ~%b24_action%~
+  TEXT_SPRINT $b24_catalog_level(~%b24_res%~) ~%b24_level%~
+  TEXT_SPRINT $b24_catalog_lists(~%b24_res%~) ~%b24_lists%~
+  TEXT_SPRINT $b24_catalog_conc(~%b24_res%~) ~%b24_conc%~
+  TEXT_SPRINT $b24_catalog_save(~%b24_res%~) ~%b24_save%~
+  TEXT_SPRINT $b24_catalog_dice(~%b24_res%~) ~%b24_dice%~
+  TEXT_SPRINT $b24_catalog_upcast(~%b24_res%~) ~%b24_upcast%~
+  TEXT_SPRINT $b24_catalog_range(~%b24_res%~) ~%b24_range%~
+  TEXT_SPRINT $b24_catalog_name(~%b24_res%~) ~%b24_name%~
+END
+
+// Dimension Door and Storm of Vengeance: BG hides them from the spell lists (High Level Ability
+// versions; the mod has no HLAs, b24_core_runtime.tpa), the 2024 lists have them.
+COPY_EXISTING ~hidespl.2da~ ~override~
+  REPLACE_TEXTUALLY CASE_INSENSITIVE ~^\(SPWI402\|SPPR722\)[ %TAB%][^%LNL%%WNL%]*[%LNL%%WNL%]+~ ~~
+  BUT_ONLY
+
+ACTION_PHP_EACH b24_catalog_action AS b24_res => b24_action BEGIN
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_res%.spl~ BEGIN
+    OUTER_TEXT_SPRINT b24_level  $b24_catalog_level(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_lists  $b24_catalog_lists(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_conc   $b24_catalog_conc(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_save   $b24_catalog_save(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_dice   $b24_catalog_dice(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_upcast $b24_catalog_upcast(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_range  $b24_catalog_range(~%b24_res%~)
+    OUTER_TEXT_SPRINT b24_name   $b24_catalog_name(~%b24_res%~)
+    ACTION_IF (~%b24_action%~ STRING_EQUAL ~DROP~) BEGIN
+      APPEND ~hidespl.2da~ ~%b24_res%  1  0  0~
+      OUTER_SET $b24_dropped(~%b24_res%~) = 1
+    END ELSE BEGIN
+      OUTER_PATCH_SAVE b24_display ~%b24_name%~ BEGIN REPLACE_TEXTUALLY ~_~ ~ ~ END
+      OUTER_SET b24_is_priest = 0
+      COPY_EXISTING ~%b24_res%.spl~ ~override~
+        WRITE_LONG 0x34 b24_level
+        READ_SHORT 0x1c b24_type
+        PATCH_IF (b24_type == 2) BEGIN
+          SET b24_is_priest = 1
+          LPF b24_priest_lists STR_VAR lists = EVAL ~%b24_lists%~ END
+        END
+        PATCH_IF (NOT (~%b24_name%~ STRING_EQUAL ~-~)) BEGIN
+          SAY_EVALUATED 0x08 ~%b24_display%~
+        END
+        // 2024 casting time: an action (or a reaction) for almost every spell, so the spell
+        // goes off within the round; spells with long 2024 casting times keep theirs.
+        PATCH_IF NOT VARIABLE_IS_SET $b24_slow_cast(~%b24_res%~) BEGIN
+          READ_LONG  0x64 b24_hoff
+          READ_SHORT 0x68 b24_hnum
+          FOR (h = 0; h < b24_hnum; ++h) BEGIN
+            WRITE_SHORT (b24_hoff + h * 0x28 + 0x12) 1
+          END
+          READ_LONG 0x50 b24_desc_ref
+          PATCH_IF (b24_desc_ref > 0) BEGIN
+            READ_STRREF 0x50 b24_desc
+            INNER_PATCH_SAVE b24_new_desc ~%b24_desc%~ BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Casting Time: *[^%LNL%%WNL%]*~ ~Casting Time: 1 action~
+            END
+            PATCH_IF NOT (~%b24_new_desc%~ STRING_EQUAL ~%b24_desc%~) BEGIN
+              SAY_EVALUATED 0x50 ~%b24_new_desc%~
+            END
+          END
+        END
+        // The 2024 save in the description: "Saving Throw: Neg." becomes "Saving Throw: Dexterity
+        // (negates)", and the ability saves the core texts derived from the 2e categories become
+        // the spell's own (as the save screen rolls it, B24SAVES.2DA).
+        PATCH_IF NOT (~%b24_save%~ STRING_EQUAL ~-~) BEGIN
+          TEXT_SPRINT b24_save_name $b24_ability_name(~%b24_save%~)
+          READ_LONG 0x50 b24_desc_ref
+          PATCH_IF (b24_desc_ref > 0) BEGIN
+            READ_STRREF 0x50 b24_desc
+            INNER_PATCH_SAVE b24_new_desc ~%b24_desc%~ BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Saving Throw: *Neg\.?~ ~Saving Throw: %b24_save_name% (negates)~
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Saving Throw: *1/2~ ~Saving Throw: %b24_save_name% (half)~
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Saving Throw: *Special~ ~Saving Throw: %b24_save_name% (special)~
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Saving Throw: *None~ ~Saving Throw: %b24_save_name%~
+              REPLACE_TEXTUALLY ~\(Strength\|Dexterity\|Constitution\|Intelligence\|Wisdom\|Charisma\) save~ ~%b24_save_name% save~
+            END
+            PATCH_IF NOT (~%b24_new_desc%~ STRING_EQUAL ~%b24_desc%~) BEGIN
+              SAY_EVALUATED 0x50 ~%b24_new_desc%~
+            END
+          END
+        END
+        // The 2024 range (RANGE: feet, T touch, "-" keeps BG's) on the headers that target a
+        // creature or a point; a BG range unit is a foot (6.4 world units, measured with -Mode RangeProbe),
+        // up to b24_range_cap.
+        PATCH_IF (NOT (~%b24_range%~ STRING_EQUAL ~-~)) BEGIN
+          PATCH_IF (~%b24_range%~ STRING_EQUAL ~T~) BEGIN
+            SET b24_units = b24_touch_units
+            TEXT_SPRINT b24_range_text ~Touch~
+          END ELSE BEGIN
+            SET b24_units = b24_range
+            PATCH_IF (b24_units > b24_range_cap) BEGIN SET b24_units = b24_range_cap END
+            TEXT_SPRINT b24_range_text ~%b24_range% feet~
+            PATCH_IF (b24_range = 5280) BEGIN TEXT_SPRINT b24_range_text ~1 mile~ END
+          END
+          READ_LONG  0x64 b24_hoff
+          READ_SHORT 0x68 b24_hnum
+          FOR (h = 0; h < b24_hnum; ++h) BEGIN
+            READ_BYTE (b24_hoff + h * 0x28 + 0x0c) b24_target
+            PATCH_IF ((b24_target != 5) AND (b24_target != 7)) BEGIN
+              WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) b24_units
+            END
+          END
+          READ_LONG 0x50 b24_desc_ref
+          PATCH_IF (b24_desc_ref > 0) BEGIN
+            READ_STRREF 0x50 b24_desc
+            INNER_PATCH_SAVE b24_new_desc ~%b24_desc%~ BEGIN
+              REPLACE_TEXTUALLY CASE_INSENSITIVE ~Range: *[^%LNL%%WNL%]*~ ~Range: %b24_range_text%~
+            END
+            PATCH_IF NOT (~%b24_new_desc%~ STRING_EQUAL ~%b24_desc%~) BEGIN
+              SAY_EVALUATED 0x50 ~%b24_new_desc%~
+            END
+          END
+        END
+        PATCH_IF (NOT (~%b24_dice%~ STRING_EQUAL ~-~)) BEGIN
+          LPF b24_parse_dice STR_VAR text = EVAL ~%b24_dice%~ RET b24_n = dice_n b24_s = dice_s b24_flat = flat b24_heal = heal END
+          LPF b24_spell_numbers INT_VAR dice_n = b24_n dice_s = b24_s flat = b24_flat heal = b24_heal END
+        END
+        BUT_ONLY
+      ACTION_IF (~%b24_conc%~ STRING_EQUAL ~1~) BEGIN
+        APPEND ~b24conc.2da~ ~%b24_res%  %b24_name%~
+      END
+      ACTION_IF NOT (~%b24_save%~ STRING_EQUAL ~-~) BEGIN
+        APPEND ~b24saves.2da~ ~%b24_res%  %b24_save%  %b24_name%~
+      END
+      // A 2024 level that differs from the file name's level digit: filed again further down.
+      OUTER_PATCH_SAVE b24_digit ~%b24_res%~ BEGIN REPLACE_TEXTUALLY ~^SP\(WI\|PR\)\([0-9]\).*$~ ~\2~ END
+      ACTION_IF (IS_AN_INT b24_digit) BEGIN
+        ACTION_IF (b24_digit != b24_level) BEGIN
+          OUTER_SET $b24_relocate(~%b24_res%~) = b24_level
+        END
+      END
+
+      // Upcast versions (upcasting option A): a copy per higher spell level, e.g. SPWI3045 is
+      // Fireball cast with a 5th level slot. Arcane versions are hidden from spell selection and
+      // learned automatically with the base spell (B24SPELL.lua); priest versions are filed under
+      // a priest spell name of their level (below), so priests find them in their lists.
+      ACTION_IF NOT (~%b24_upcast%~ STRING_EQUAL ~-~) BEGIN
+        OUTER_SET b24_max = b24_is_priest ? 7 : 9
+        OUTER_PATCH_SAVE b24_up_text ~%b24_upcast%~ BEGIN REPLACE_TEXTUALLY ~^H~ ~~ END
+        COPY - ~bg2024/tables/b24spell.2da~ ~override~
+          LPF b24_parse_dice STR_VAR text = EVAL ~%b24_dice%~ RET b24_n = dice_n b24_s = dice_s b24_flat = flat b24_heal = heal END
+          LPF b24_parse_dice STR_VAR text = EVAL ~%b24_upcast%~ RET b24_un = dice_n b24_us = dice_s b24_uflat = flat b24_uheal = heal END
+        OUTER_FOR (b24_up = b24_level + 1; b24_up <= b24_max; ++b24_up) BEGIN
+          OUTER_SET b24_steps = b24_up - b24_level
+          COPY_EXISTING ~%b24_res%.spl~ ~override/%b24_res%%b24_up%.spl~
+            WRITE_LONG 0x34 b24_up
+            SAY_EVALUATED 0x08 ~%b24_display% (level %b24_up%)~
+            LPF b24_spell_numbers INT_VAR dice_n = (b24_n + b24_steps * b24_un) dice_s = b24_s
+              flat = (b24_flat + b24_steps * b24_uflat) heal = b24_heal END
+          ACTION_IF (~%b24_conc%~ STRING_EQUAL ~1~) BEGIN
+            APPEND ~b24conc.2da~ ~%b24_res%%b24_up%  %b24_name%~
+          END
+          ACTION_IF NOT (~%b24_save%~ STRING_EQUAL ~-~) BEGIN
+            APPEND ~b24saves.2da~ ~%b24_res%%b24_up%  %b24_save%  %b24_name%~
+          END
+          ACTION_IF NOT b24_is_priest BEGIN
+            APPEND ~hidespl.2da~ ~%b24_res%%b24_up%  1  0  0~
+            APPEND ~b24upcst.2da~ ~%b24_res%%b24_up%  %b24_res%  %b24_up%~
+          END ELSE BEGIN
+            // Priest versions go into the priest lists under a name with their level.
+            OUTER_SET $b24_relocate(~%b24_res%%b24_up%~) = b24_up
+          END
+        END
+      END
+    END
+  END
+END
+
+LAM b24_relocate_spells
+
+// Scrolls of dropped spells can still be read, but no longer teach the spell; scrolls of re-filed
+// spells teach the new name.
+COPY_EXISTING_REGEXP GLOB ~^.+\.itm$~ ~override~
+  PATCH_IF (SOURCE_SIZE > 0x71) BEGIN
+    READ_SHORT 0x1c b24_itype
+    PATCH_IF (b24_itype == 11) BEGIN
+      READ_LONG  0x64 hdr_off
+      READ_SHORT 0x68 hdr_num
+      READ_LONG  0x6a fx_off
+      FOR (h = 0; h < hdr_num; ++h) BEGIN
+        READ_SHORT (hdr_off + h * 0x38 + 0x1e) fx_num
+        READ_SHORT (hdr_off + h * 0x38 + 0x20) fx_idx
+        FOR (k = 0; k < fx_num; ++k) BEGIN
+          SET f = fx_off + (fx_idx + k) * 0x30
+          READ_SHORT f opcode
+          PATCH_IF (opcode == 147) BEGIN
+            READ_ASCII (f + 0x14) b24_learn (8) NULL
+            TO_UPPER b24_learn
+            PATCH_IF VARIABLE_IS_SET $b24_dropped(~%b24_learn%~) BEGIN
+              WRITE_SHORT f 0      // AC bonus +0: harmless, keeps the effect count unchanged
+              WRITE_LONG (f + 0x04) 0
+              WRITE_LONG (f + 0x08) 0
+            END ELSE PATCH_IF VARIABLE_IS_SET $b24_moved_to(~%b24_learn%~) BEGIN
+              // Re-filed spells: the scroll teaches the new name.
+              TEXT_SPRINT b24_learn_new $b24_moved_to(~%b24_learn%~)
+              WRITE_ASCIIE (f + 0x14) ~%b24_learn_new%~ #8
+            END
+          END
+        END
+      END
+    END
+  END
+  BUT_ONLY
+
+// Cantrips (innate, at will; B24CANT in B24SPELL.lua, parameter 1 = index in B24SP.CANTRIPS).
+// Range 0 = around the caster (Word of Radiance).
+DEFINE_ACTION_MACRO b24_cantrip
+BEGIN
+  LAF b24_create_lua_spell
+    INT_VAR name = b24_name description = b24_desc type = 4 level = 1 target = (b24_range == 0) ? 5 : 1
+            range = b24_range cast_anim = b24_anim parameter1 = b24_id
+    STR_VAR resref = EVAL ~%b24_res%~ icon = EVAL ~%b24_icon%~ function = ~B24CANT~
+  END
+END
+OUTER_SET b24_id = 1  OUTER_SPRINT b24_res B24CACID OUTER_SPRINT b24_icon SPWI313C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 5
+OUTER_SET b24_name = RESOLVE_STR_REF (@300) OUTER_SET b24_desc = RESOLVE_STR_REF (@301) LAM b24_cantrip
+OUTER_SET b24_id = 2  OUTER_SPRINT b24_res B24CCHIL OUTER_SPRINT b24_icon SPWI117C OUTER_SET b24_range = 1 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@302) OUTER_SET b24_desc = RESOLVE_STR_REF (@303) LAM b24_cantrip
+OUTER_SET b24_id = 3  OUTER_SPRINT b24_res B24CFIRE OUTER_SPRINT b24_icon SPPR106C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 15
+OUTER_SET b24_name = RESOLVE_STR_REF (@304) OUTER_SET b24_desc = RESOLVE_STR_REF (@305) LAM b24_cantrip
+OUTER_SET b24_id = 4  OUTER_SPRINT b24_res B24CPOIS OUTER_SPRINT b24_icon SPWI213C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 11
+OUTER_SET b24_name = RESOLVE_STR_REF (@306) OUTER_SET b24_desc = RESOLVE_STR_REF (@307) LAM b24_cantrip
+OUTER_SET b24_id = 5  OUTER_SPRINT b24_res B24CFROS OUTER_SPRINT b24_icon SPWI320C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 15
+OUTER_SET b24_name = RESOLVE_STR_REF (@308) OUTER_SET b24_desc = RESOLVE_STR_REF (@309) LAM b24_cantrip
+OUTER_SET b24_id = 6  OUTER_SPRINT b24_res B24CSHOC OUTER_SPRINT b24_icon SPWI115C OUTER_SET b24_range = 1 OUTER_SET b24_anim = 10
+OUTER_SET b24_name = RESOLVE_STR_REF (@310) OUTER_SET b24_desc = RESOLVE_STR_REF (@311) LAM b24_cantrip
+OUTER_SET b24_id = 7  OUTER_SPRINT b24_res B24CBURS OUTER_SPRINT b24_icon SPWI112C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 15
+OUTER_SET b24_name = RESOLVE_STR_REF (@312) OUTER_SET b24_desc = RESOLVE_STR_REF (@313) LAM b24_cantrip
+OUTER_SET b24_id = 8  OUTER_SPRINT b24_res B24CSACR OUTER_SPRINT b24_icon SPPR450C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@314) OUTER_SET b24_desc = RESOLVE_STR_REF (@315) LAM b24_cantrip
+OUTER_SET b24_id = 9  OUTER_SPRINT b24_res B24CTOLL OUTER_SPRINT b24_icon SPWI119C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 11
+OUTER_SET b24_name = RESOLVE_STR_REF (@316) OUTER_SET b24_desc = RESOLVE_STR_REF (@317) LAM b24_cantrip
+OUTER_SET b24_id = 10 OUTER_SPRINT b24_res B24CWORD OUTER_SPRINT b24_icon SPCL236C OUTER_SET b24_range = 0 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@318) OUTER_SET b24_desc = RESOLVE_STR_REF (@319) LAM b24_cantrip
+OUTER_SET b24_id = 11 OUTER_SPRINT b24_res B24CFLAM OUTER_SPRINT b24_icon SPPR503C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@320) OUTER_SET b24_desc = RESOLVE_STR_REF (@321) LAM b24_cantrip
+OUTER_SET b24_id = 12 OUTER_SPRINT b24_res B24CTHRN OUTER_SPRINT b24_icon SPPR105C OUTER_SET b24_range = 20 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@322) OUTER_SET b24_desc = RESOLVE_STR_REF (@323) LAM b24_cantrip
+OUTER_SET b24_id = 13 OUTER_SPRINT b24_res B24CWISP OUTER_SPRINT b24_icon SPPR751C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 9
+OUTER_SET b24_name = RESOLVE_STR_REF (@324) OUTER_SET b24_desc = RESOLVE_STR_REF (@325) LAM b24_cantrip
+OUTER_SET b24_id = 14 OUTER_SPRINT b24_res B24CMOCK OUTER_SPRINT b24_icon SPWI411C OUTER_SET b24_range = 60 OUTER_SET b24_anim = 11
+OUTER_SET b24_name = RESOLVE_STR_REF (@326) OUTER_SET b24_desc = RESOLVE_STR_REF (@327) LAM b24_cantrip
+
+// New 2024 spells. Healing uses B24HEAL (parameter 1 dice, parameter 2 die size); the bard
+// versions are arcane copies only bards keep (B24SPELL.lua); the others call B24NSPL with their
+// index in B24SP.SPELLS.
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@340) description = RESOLVE_STR_REF (@341) type = 2 level = 1 range = 60
+  cast_anim = 9 parameter1 = 2 parameter2 = 4 STR_VAR resref = ~B24HWORD~ icon = ~SPPR401C~ function = ~B24HEAL~ lists = ~CD~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@340) description = RESOLVE_STR_REF (@341) type = 1 level = 1 range = 60
+  cast_anim = 9 parameter1 = 2 parameter2 = 4 STR_VAR resref = ~B24HWBRD~ icon = ~SPPR401C~ function = ~B24HEAL~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@342) description = RESOLVE_STR_REF (@343) type = 1 level = 1 range = 1
+  cast_anim = 9 parameter1 = 2 parameter2 = 8 STR_VAR resref = ~B24CWBRD~ icon = ~SPPR103B~ function = ~B24HEAL~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@346) description = RESOLVE_STR_REF (@347) type = 2 level = 1 range = 60
+  cast_anim = 9 parameter1 = 1 STR_VAR resref = ~B24GBOLT~ icon = ~SPPR614C~ function = ~B24NSPL~ lists = ~C~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@348) description = RESOLVE_STR_REF (@349) type = 1 level = 1 target = 5
+  cast_anim = 11 parameter1 = 2 STR_VAR resref = ~B24THWAV~ icon = ~SPWI621C~ function = ~B24NSPL~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@348) description = RESOLVE_STR_REF (@349) type = 2 level = 1 target = 5
+  cast_anim = 11 parameter1 = 2 STR_VAR resref = ~B24THWVD~ icon = ~SPWI621C~ function = ~B24NSPL~ lists = ~D~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@350) description = RESOLVE_STR_REF (@351) type = 1 level = 2 range = 60
+  cast_anim = 11 parameter1 = 3 STR_VAR resref = ~B24SHATR~ icon = ~SPWI913C~ function = ~B24NSPL~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@354) description = RESOLVE_STR_REF (@355) type = 2 level = 3 target = 5
+  cast_anim = 9 parameter1 = 4 STR_VAR resref = ~B24SPGRD~ icon = ~SPPR150C~ function = ~B24NSPL~ lists = ~C~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@344) description = RESOLVE_STR_REF (@345) type = 2 level = 3 target = 5
+  cast_anim = 9 parameter1 = 2 parameter2 = 4 STR_VAR resref = ~B24MHWRD~ icon = ~SPPR514C~ function = ~B24MHEAL~ lists = ~C~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@344) description = RESOLVE_STR_REF (@345) type = 1 level = 3 target = 5
+  cast_anim = 9 parameter1 = 2 parameter2 = 4 STR_VAR resref = ~B24MHWBD~ icon = ~SPPR514C~ function = ~B24MHEAL~ END
+// Enlarge/Reduce: two spells for the two choices (B24SIZE in B24SPELL.lua, parameter 1: 1 Enlarge, 2
+// Reduce), arcane and druid versions.
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@772) description = RESOLVE_STR_REF (@773) type = 1 level = 2 range = 30
+  cast_anim = 11 parameter1 = 1 STR_VAR resref = ~B24ENLRG~ icon = ~SPWI214C~ function = ~B24SIZE~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@774) description = RESOLVE_STR_REF (@775) type = 1 level = 2 range = 30
+  cast_anim = 11 parameter1 = 2 STR_VAR resref = ~B24REDUC~ icon = ~SPWI221C~ function = ~B24SIZE~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@772) description = RESOLVE_STR_REF (@773) type = 2 level = 2 range = 30
+  cast_anim = 11 parameter1 = 1 STR_VAR resref = ~B24ENLDR~ icon = ~SPWI214C~ function = ~B24SIZE~ lists = ~D~ END
+LAF b24_create_lua_spell INT_VAR name = RESOLVE_STR_REF (@774) description = RESOLVE_STR_REF (@775) type = 2 level = 2 range = 30
+  cast_anim = 11 parameter1 = 2 STR_VAR resref = ~B24REDDR~ icon = ~SPWI221C~ function = ~B24SIZE~ lists = ~D~ END
+
+// Looks borrowed from vanilla spells until the mod has its own (docs/Asset list.md): casting
+// sound, hit effects and, where the value is 1, the projectile (single-target models only).
+ACTION_DEFINE_ASSOCIATIVE_ARRAY b24_looks BEGIN
+  B24CACID, SPWI211 => 1  // Acid Splash: Acid Arrow
+  B24CCHIL, SPWI117 => 0  // Chill Touch: Chill Touch (touch)
+  B24CFIRE, SPWI303 => 1  // Fire Bolt: Flame Arrow
+  B24CPOIS, SPWI119 => 1  // Poison Spray: Larloch's Minor Drain
+  B24CFROS, SPWI118 => 1  // Ray of Frost: Chromatic Orb
+  B24CSHOC, SPWI115 => 0  // Shocking Grasp: Shocking Grasp (touch)
+  B24CBURS, SPWI112 => 1  // Sorcerous Burst: Magic Missile
+  B24CSACR, SPPR503 => 0  // Sacred Flame: Flame Strike's flames
+  B24CTOLL, SPWI913 => 0  // Toll the Dead: Wail of the Banshee's sound
+  B24CWORD, SPPR108 => 0  // Word of Radiance: Remove Fear's burst
+  B24CFLAM, SPWI217 => 1  // Produce Flame: Scorching Ray
+  B24CTHRN, SPPR105 => 0  // Thorn Whip: Entangle's sounds
+  B24CWISP, SPPR106 => 1  // Starry Wisp: Magical Stone
+  B24CMOCK, SPWI411 => 0  // Vicious Mockery: Hopelessness
+  B24HWORD, SPPR401 => 0  // Healing Word: healing sparkle
+  B24HWBRD, SPPR401 => 0
+  B24CWBRD, SPPR103 => 0  // Cure Wounds (bard)
+  B24GBOLT, SPWI118 => 1  // Guiding Bolt: Chromatic Orb
+  B24THWAV, SPWI621 => 0  // Thunderwave: air elemental burst
+  B24THWVD, SPWI621 => 0
+  B24SHATR, SPWI913 => 0  // Shatter: Wail of the Banshee's sound
+  B24SPGRD, SPPR150 => 0  // Spirit Guardians: Spirit Ward
+  B24MHWRD, SPPR514 => 0  // Mass Healing Word: Mass Cure Wounds' sparkle
+  B24MHWBD, SPPR514 => 0
+END
+ACTION_PHP_EACH b24_looks AS spell => projectile BEGIN
+  LAF b24_spell_look INT_VAR projectile STR_VAR resref = EVAL ~%spell_0%~ model = EVAL ~%spell_1%~ END
+END
+
+// Misty Step: Dimension Door at level 2. Revivify: Raise Dead at level 3.
+COPY_EXISTING ~spwi402.spl~ ~override/B24MSTEP.spl~
+  WRITE_LONG 0x08 RESOLVE_STR_REF (@352)
+  WRITE_LONG 0x50 RESOLVE_STR_REF (@353)
+  WRITE_LONG 0x34 2
+  // 30 feet (Dimension Door's own range is set by the catalog before this copy).
+  READ_LONG  0x64 b24_hoff
+  READ_SHORT 0x68 b24_hnum
+  FOR (h = 0; h < b24_hnum; ++h) BEGIN
+    WRITE_SHORT (b24_hoff + h * 0x28 + 0x0e) 30
+  END
+// Revivify's effects are Lua (B24REVIV in B24DYING.lua): only within a minute of death, and it
+// also brings back a protagonist past its third failed death save. Cleric and druid lists, so
+// paladins and rangers have it too.
+COPY_EXISTING ~sppr504.spl~ ~override/B24REVIV.spl~
+  WRITE_LONG 0x08 RESOLVE_STR_REF (@356)
+  WRITE_LONG 0x50 RESOLVE_STR_REF (@357)
+  WRITE_LONG 0x34 3
+  LPF b24_priest_lists STR_VAR lists = ~CD~ END
+  READ_LONG  0x64 hdr_off
+  READ_SHORT 0x68 hdr_num
+  READ_LONG  0x6a fx_off
+  FOR (h = 0; h < hdr_num; ++h) BEGIN
+    READ_SHORT (hdr_off + h * 0x28 + 0x1e) fx_num
+    READ_SHORT (hdr_off + h * 0x28 + 0x20) fx_idx
+    FOR (k = 0; k < fx_num; ++k) BEGIN
+      WRITE_SHORT (fx_off + (fx_idx + k) * 0x30) 999
+    END
+  END
+  LPF DELETE_EFFECT INT_VAR match_opcode = 999 END
+  LPF ADD_SPELL_EFFECT INT_VAR opcode = 402 target = 2 timing = 0 duration = 0 probability1 = 100 STR_VAR resource = ~B24REVIV~ END
+
+// New arcane spells are learned automatically by the classes whose lists hold them
+// (B24SPELL.lua, B24SP.NEW_ARCANE).
+
+COPY ~bg2024/lua/M_B24SP.lua~   ~override~
+     ~bg2024/lua/B24SPELL.lua~  ~override~
+
+// Upcasting of the mod's new spells (as the catalog's upcast versions): a copy per higher slot
+// level, B24U + three letters + level (the 8-letter names leave no room for a digit). Spells whose
+// dice are in Lua (B24NSPL) read the copy's level (B24SP.UpcastDice); the heals get their dice
+// here (heal_up dice per level). Arcane copies are hidden and learned with the base spell
+// (B24UPCST.2DA); priest copies go into the priest lists like the base spells (b24_relocate).
+// Entries: base, short name, base level, priest (1) or arcane (0), heal dice per level, concentration.
+ACTION_FOR_EACH b24_upnew IN
+  ~B24GBOLT:GBL:1:1:0:0~ ~B24THWAV:THW:1:0:0:0~ ~B24THWVD:THD:1:1:0:0~ ~B24SHATR:SHA:2:0:0:0~
+  ~B24SPGRD:SPG:3:1:0:1~ ~B24HWORD:HWO:1:1:2:0~ ~B24HWBRD:HWB:1:0:2:0~ ~B24MHWRD:MHW:3:1:1:0~
+  ~B24MHWBD:MHB:3:0:1:0~ BEGIN
+  OUTER_PATCH_SAVE b24_un_base  ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~^\([^:]*\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_un_short ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~^[^:]*:\([^:]*\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_un_level ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~^[^:]*:[^:]*:\([^:]*\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_un_priest ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~^[^:]*:[^:]*:[^:]*:\([^:]*\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_un_heal ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~^[^:]*:[^:]*:[^:]*:[^:]*:\([^:]*\):.*~ ~\1~ END
+  OUTER_PATCH_SAVE b24_un_conc ~%b24_upnew%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_un_base%.spl~ BEGIN
+    OUTER_SET b24_un_max = b24_un_priest ? 7 : 9
+    OUTER_FOR (b24_up = b24_un_level + 1; b24_up <= b24_un_max; ++b24_up) BEGIN
+      OUTER_SET b24_steps = b24_up - b24_un_level
+      OUTER_SPRINT b24_un_copy ~B24U%b24_un_short%%b24_up%~
+      COPY_EXISTING ~%b24_un_base%.spl~ ~override/%b24_un_copy%.spl~
+        WRITE_LONG 0x34 b24_up
+        READ_STRREF 0x08 b24_un_name
+        SAY_EVALUATED 0x08 ~%b24_un_name% (level %b24_up%)~
+        PATCH_IF (b24_un_heal > 0) BEGIN
+          READ_LONG  0x64 b24_hoff
+          READ_LONG  0x6a b24_foff
+          READ_SHORT (b24_hoff + 0x1e) b24_fnum
+          READ_SHORT (b24_hoff + 0x20) b24_fidx
+          FOR (k = 0; k < b24_fnum; ++k) BEGIN
+            SET f = b24_foff + (b24_fidx + k) * 0x30
+            READ_SHORT f b24_op
+            PATCH_IF (b24_op == 402) BEGIN
+              READ_LONG (f + 0x04) b24_dice
+              WRITE_LONG (f + 0x04) (b24_dice + b24_steps * b24_un_heal)
+            END
+          END
+        END
+      ACTION_IF (b24_un_conc == 1) BEGIN
+        APPEND ~b24conc.2da~ ~%b24_un_copy%  Spirit_Guardians~
+      END
+      ACTION_IF b24_un_priest BEGIN
+        OUTER_SET $b24_relocate(~%b24_un_copy%~) = b24_up
+      END ELSE BEGIN
+        APPEND ~hidespl.2da~ ~%b24_un_copy%  1  0  0~
+        APPEND ~b24upcst.2da~ ~%b24_un_copy%  %b24_un_base%  %b24_up%~
+      END
+    END
+  END
+END
+
+// The new priest spells go into the priest lists under SPPR names too, and the table of re-filed
+// spells is written for B24SPELL.lua.
+ACTION_FOR_EACH b24_new_priest IN ~B24HWORD:1~ ~B24GBOLT:1~ ~B24THWVD:1~ ~B24SPGRD:3~ ~B24MHWRD:3~ ~B24REVIV:3~ ~B24ENLDR:2~ ~B24REDDR:2~ BEGIN
+  OUTER_PATCH_SAVE b24_np_res ~%b24_new_priest%~ BEGIN REPLACE_TEXTUALLY ~:.*~ ~~ END
+  OUTER_PATCH_SAVE b24_np_lvl ~%b24_new_priest%~ BEGIN REPLACE_TEXTUALLY ~.*:~ ~~ END
+  OUTER_SET $b24_relocate(~%b24_np_res%~) = b24_np_lvl
+END
+LAM b24_relocate_spells
+
+COPY ~bg2024/tables/b24upcst.2da~ ~override/b24moved.2da~
+  DELETE_BYTES 0 BUFFER_LENGTH
+  INSERT_BYTES 0 (STRING_LENGTH ~2DA V1.0%LNL%*%LNL%          NEW%LNL%%b24_moved_rows%~)
+  WRITE_ASCIIE 0 ~2DA V1.0%LNL%*%LNL%          NEW%LNL%%b24_moved_rows%~
+
+// Innate copies of spells (SPPR101 -> B24IP101, SPWI112 -> B24IW112): Divine Intervention, Magical
+// Secrets, Spell Mastery and Signature Spells cast them as innate abilities without a spell slot
+// (op171 with a priest or wizard spell only adds it to the spells known). All Cleric and Druid
+// spells, wizard spells of levels 1-3. Made after the catalog changes, so they match.
+COPY - ~bg2024/tables/b24spell.2da~ ~override~
+  READ_2DA_ENTRIES_NOW b24_cat 9
+  FOR (r = 0; r < b24_cat; ++r) BEGIN
+    READ_2DA_ENTRY_FORMER b24_cat r 0 b24_res
+    READ_2DA_ENTRY_FORMER b24_cat r 1 b24_action
+    READ_2DA_ENTRY_FORMER b24_cat r 2 b24_level
+    READ_2DA_ENTRY_FORMER b24_cat r 3 b24_lists
+    SET b24_priest = ((~%b24_res%~ STRING_MATCHES_REGEXP ~SPPR[0-9][0-9][0-9]~) = 0
+                      AND ((INDEX (~C~ ~%b24_lists%~) >= 0) OR (INDEX (~D~ ~%b24_lists%~) >= 0))) ? 1 : 0
+    SET b24_wizard = 0
+    PATCH_IF ((~%b24_res%~ STRING_MATCHES_REGEXP ~SPWI[0-9][0-9][0-9]~) = 0 AND (INDEX (~W~ ~%b24_lists%~) >= 0)
+              AND IS_AN_INT b24_level) BEGIN
+      SET b24_wizard = (b24_level >= 1 AND b24_level <= 3) ? 1 : 0
+    END
+    PATCH_IF ((b24_priest OR b24_wizard) AND (~%b24_action%~ STRING_COMPARE_CASE ~DROP~) != 0) BEGIN
+      INNER_ACTION BEGIN
+        ACTION_IF FILE_EXISTS_IN_GAME ~%b24_res%.spl~ BEGIN
+          OUTER_PATCH_SAVE b24_copy ~%b24_res%~ BEGIN
+            REPLACE_TEXTUALLY ~^SPPR~ ~B24IP~
+            REPLACE_TEXTUALLY ~^SPWI~ ~B24IW~
+          END
+          COPY_EXISTING ~%b24_res%.spl~ ~override/%b24_copy%.spl~
+            WRITE_SHORT 0x1c 4   // innate
+            READ_LONG  0x64 b24_hoff
+            READ_SHORT 0x68 b24_hnum
+            FOR (h = 0; h < b24_hnum; ++h) BEGIN
+              WRITE_BYTE (b24_hoff + h * 0x28 + 0x02) 4   // cast from the abilities
+            END
+        END
+      END
+    END
+  END
+// Wish (BG2) for Greater Divine Intervention: B24IW914.
+ACTION_IF FILE_EXISTS_IN_GAME ~spwi914.spl~ BEGIN
+  COPY_EXISTING ~spwi914.spl~ ~override/b24iw914.spl~
+    WRITE_SHORT 0x1c 4
+    READ_LONG  0x64 b24_hoff
+    READ_SHORT 0x68 b24_hnum
+    FOR (h = 0; h < b24_hnum; ++h) BEGIN
+      WRITE_BYTE (b24_hoff + h * 0x28 + 0x02) 4
+    END
+END
+
+// The mod's own icons for the spells and innates made above.
+LAF b24_install_icons END
+
+// The darts and rays after the first, aimed one by one (B24SP.volleys in B24SPELL.lua): innates
+// at the spell's range with one missile or ray each, granted for a round after the cast.
+ACTION_FOR_EACH b24_volley IN dart ray BEGIN
+  ACTION_MATCH ~%b24_volley%~ WITH
+    dart BEGIN
+      OUTER_SPRINT b24_res ~B24MDART~ OUTER_SPRINT b24_spell ~spwi112~ OUTER_SPRINT b24_icon ~SPWI112C~
+      OUTER_SPRINT b24_fx ~B24MDARX~ OUTER_SET b24_name = RESOLVE_STR_REF (@768) OUTER_SET b24_desc = RESOLVE_STR_REF (@769)
+    END
+    DEFAULT
+      OUTER_SPRINT b24_res ~B24SRAY~ OUTER_SPRINT b24_spell ~spwi217~ OUTER_SPRINT b24_icon ~SPWI217C~
+      OUTER_SPRINT b24_fx ~B24SRAYX~ OUTER_SET b24_name = RESOLVE_STR_REF (@770) OUTER_SET b24_desc = RESOLVE_STR_REF (@771)
+  END
+  ACTION_IF FILE_EXISTS_IN_GAME ~%b24_spell%.spl~ BEGIN
+    COPY_EXISTING ~%b24_spell%.spl~ ~override~
+      READ_LONG  0x64 b24_hoff
+      READ_SHORT (b24_hoff + 0x0e) b24_volley_range
+      READ_SHORT (b24_hoff + 0x26) b24_volley_proj
+      BUT_ONLY
+    LAF b24_create_innate INT_VAR name = b24_name description = b24_desc opcode = 402 touch = 1
+      range = b24_volley_range STR_VAR resref = EVAL ~%b24_res%~ icon = EVAL ~%b24_icon%~ effect_res = EVAL ~%b24_fx%~ END
+    COPY_EXISTING ~%b24_res%.spl~ ~override~
+      WRITE_SHORT (0x72 + 0x26) b24_volley_proj
+      BUT_ONLY
+  END
+END

@@ -1,0 +1,59 @@
+// BG 2024 Rules Mod - install script
+// One component per system; see docs/ for the design document.
+
+BACKUP ~weidu_external/backup/bg2024~
+AUTHOR ~Thorben~
+VERSION ~v0.1.0~
+
+README ~bg2024/README.md~
+
+AUTO_TRA ~bg2024/tra/%s~
+
+ALWAYS
+  INCLUDE ~bg2024/lib/b24_util.tpa~
+END
+
+LANGUAGE ~English~ ~english~ ~bg2024/tra/english/setup.tra~
+
+// 1. Core rules: ability modifiers, proficiency, AC, hit points, six saves, advantage,
+//    concentration, rests, exhaustion, Heroic Inspiration.
+BEGIN @1 DESIGNATED 1
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee~ @2
+REQUIRE_PREDICATE (FILE_EXISTS ~EEex.dll~ AND FILE_EXISTS ~EEex_scripts/B3AttackInfo.lua~) @3
+
+INCLUDE ~bg2024/lib/b24_core_runtime.tpa~
+INCLUDE ~bg2024/lib/b24_core_tables.tpa~
+INCLUDE ~bg2024/lib/b24_core_text.tpa~
+INCLUDE ~bg2024/lib/b24_core_items.tpa~
+INCLUDE ~bg2024/lib/b24_core_conditions.tpa~
+
+// 2. Monster math pass: AC, attack bonus and ability scores of non-party creatures.
+BEGIN @4 DESIGNATED 2
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee~ @2
+REQUIRE_COMPONENT ~bg2024.tp2~ 1 @5
+
+INCLUDE ~bg2024/lib/b24_monsters.tpa~
+
+// 3. Character creation: 2024 ability scores (point-buy, standard array, 4d6 drop lowest),
+//    no racial ability adjustments, background with ability increases and origin feat.
+BEGIN @6 DESIGNATED 3
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee~ @2
+REQUIRE_COMPONENT ~bg2024.tp2~ 1 @7
+
+INCLUDE ~bg2024/lib/b24_chargen.tpa~
+
+// 4. Fighter: the 2024 Fighter with the Champion subclass; Ability Score Improvement, Fighting
+//    Style and Weapon Mastery choices at level-up.
+BEGIN @8 DESIGNATED 4
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee~ @2
+REQUIRE_COMPONENT ~bg2024.tp2~ 1 @9
+
+INCLUDE ~bg2024/lib/b24_fighter.tpa~
+
+// 5. Spells: 2024 spell slots, the spell catalog (levels, lists, saves, damage, names), upcast
+//    versions, cantrips and new 2024 spells.
+BEGIN @10 DESIGNATED 5
+REQUIRE_PREDICATE GAME_IS ~bgee bg2ee~ @2
+REQUIRE_COMPONENT ~bg2024.tp2~ 1 @11
+
+INCLUDE ~bg2024/lib/b24_spells.tpa~
